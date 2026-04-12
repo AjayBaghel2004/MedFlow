@@ -1,0 +1,57 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div id="dashboard-module" class="module-content"> <!--d-none-->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card p-3">
+                <small class="text-muted">Total Medicines</small>
+                <h3 class="fw-bold">1,240</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card p-3 border-danger">
+                <small class="text-muted">Low Stock Alerts</small>
+                <h3 class="fw-bold text-danger">12</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card p-3 border-primary">
+                <small class="text-muted">Today's Sales</small>
+                <h3 class="fw-bold text-primary">$4,250</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card p-3 border-warning">
+                <small class="text-muted">Expiring Soon</small>
+                <h3 class="fw-bold text-warning">08</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="table-container mb-4">
+                <h5 class="fw-bold mb-3">Sales Analytics (Weekly)</h5>
+                <canvas id="salesChart" height="150"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="table-container">
+                <h5 class="fw-bold mb-3 text-danger"><i class="bi bi-bell"></i> Critical Alerts</h5>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Paracetamol 500mg
+                        <span class="badge bg-danger rounded-pill">Out of Stock</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Amoxicillin (Batch #44)
+                        <span class="badge bg-warning text-dark rounded-pill">Expiring In 5 Days</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

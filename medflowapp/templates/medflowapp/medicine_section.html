@@ -1,0 +1,280 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div id="medicine-module" class="module-content"> <!--d-none-->
+    <div class="table-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold m-0">Medicine Stock List</h5>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addMedicineModal"><i
+                    class="bi bi-plus-lg"></i> Add Medicine</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead class="table-light text-muted">
+                    <tr>
+                        <th>Medicine Name</th>
+                        <th>Category</th>
+                        <th>Expiry</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Stock Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for medicine in medicines %}
+                    <tr>
+                        <td class="fw-semibold">{{ medicine.medicine_name}}</td>
+                        <td>{{ medicine.med_category }}</td>
+                        <td>{{ medicine.expiry_date }}</td>
+                        <td>{{ medicine.quantity }}</td>
+                        <td>&#8377;{{ medicine.price }}</td>
+                        <td>{{ medicine.stock_status }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                data-bs-target="#updateMedicineModal">
+                                <a href="/updation-page/{{medicine.id}}"><i class="bi bi-pencil"></i></a>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger"
+                                onclick="delete_medicine('{{medicine.id}}')"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="addMedicineModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">New Medicine Record</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="medicineForm">
+                    <div class="mb-3">
+                        <label class="form-label">Medicine Name</label>
+                        <input type="text" id='medicine_name' class="form-control" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="category">
+                                <option value="-------">--------</option>
+                                <option value="TAB">Tablet</option>
+                                <option value="SYR">Syrup</option>
+                                <option value="INJ">Injection</option>
+                                <option value="CAP">Capsule</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" id="expiry_date" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Unit Price (&#8377;)</label>
+                            <input type="number" id="price" class="form-control" step="0.01">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Initial Quantity</label>
+                            <input type="number" id="quantity" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="stock_status">
+                                <option value="-------">------</option>
+                                <option value="Out of Stock">Out of Stock</option>
+                                <option value="Overstock">Overstock</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success px-4" onclick="add_medicine()">Save Entry</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Update Medicine form -->
+<!-- Update Medicine Modal -->
+<div class="modal fade" id="updateMedicineModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+
+            <!-- Header -->
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Update Medicine Record</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body">
+                <form id="medicineForm">
+                    {% csrf_token %}
+
+                    <!-- Hidden ID -->
+                    <input type="hidden" id="med_ID">
+
+                    <!-- Medicine Name -->
+                    <div class="mb-3">
+                        <label class="form-label">Medicine Name</label>
+                        <input type="text" id="medicine_name" class="form-control" required>
+                    </div>
+
+                    <!-- Category + Expiry -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="category">
+                                <option value="">--------</option>
+                                <option value="TAB">Tablet</option>
+                                <option value="SYR">Syrup</option>
+                                <option value="INJ">Injection</option>
+                                <option value="CAP">Capsule</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" id="expiry_date" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Price + Quantity -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Unit Price (₹)</label>
+                            <input type="number" id="price" class="form-control" step="0.01">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" id="quantity" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Stock Status -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="stock_status">
+                                <option value="">------</option>
+                                <option value="Out of Stock">Out of Stock</option>
+                                <option value="Overstock">Overstock</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-success px-4" onclick="update_medicine()"><a href="/update-medicine/"></a>
+                    Save Entry
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+    integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+    integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    function add_medicine() {
+        let medicine_name = $('#medicine_name').val()
+        let category = $('#category').val()
+        let expiry_date = $('#expiry_date').val()
+        let stock_status = $('#stock_status').val()
+        let price = $('#price').val()
+        let quantity = $('#quantity').val()
+
+        $.ajax({
+            method: "POST",
+            url: '/add-medicine/',
+            data: {
+                "medicine_name": medicine_name,
+                "category": category,
+                "expiry_date": expiry_date,
+                "stock_status": stock_status,
+                "price": price,
+                "quantity": quantity
+            },
+            success: function () {
+                // alert("New Medicine Entered.")
+                location.href = '/medicine/'
+            },
+            error: function () {
+                alert("Medicine Not Added")
+            }
+
+        })
+    }
+
+    //delete medicine
+    function delete_medicine(medicine_ID) {
+        $.ajax({
+            method: "POST",
+            url: '/delete-medicine/',
+            data: {
+                "medicine_ID": medicine_ID
+            },
+            success: function () {
+                // alert("Medicine Deleted")
+                location.href = '/medicine/'
+            },
+            error: function () {
+                alert("Medicine not deleted")
+            }
+        })
+    }
+
+    function update_medicine() {
+        var med_ID = $('#med_ID').val()
+        var expiry_date = $('#expiry_date').val()
+        var quantity = $('#quantity').val()
+        var stock_status = $('#stock_status').val()
+        var price = $('#price').val()
+
+        $.ajax({
+            method: "POST",
+            url: "/update-medicine/",
+            data: {
+                "med_ID": med_ID,
+                "expiry_date": expiry_date,
+                "quantity": quantity,
+                "stock_status": stock_status,
+                "price": price
+            },
+            success: function () {
+                alert("Medicine updated successfully")
+                location.href = "/medicine/"
+            },
+            error: function () {
+                alert("Medicine information not updated")
+            }
+        })
+
+    }
+</script>
+{% endblock %}

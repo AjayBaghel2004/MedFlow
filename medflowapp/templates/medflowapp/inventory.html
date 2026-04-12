@@ -1,0 +1,84 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+<div id="inventory-module" class="module-content"> <!--d-none-->
+    <div class="row g-3 mb-4">
+        <div class="col-md-12">
+            <div class="table-container border-bottom">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <h5 class="fw-bold m-0"><i class="bi bi-box-seam text-success"></i> Real-time Inventory</h5>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="d-flex gap-2 justify-content-md-end">
+                            <select class="form-select form-select-sm w-auto">
+                                <option>All Categories</option>
+                                <option>Tablet</option>
+                                <option>Syrup</option>
+                                <option>Cold Chain</option>
+                            </select>
+                            <select class="form-select form-select-sm w-auto">
+                                <option>Stock Status: All</option>
+                                <option class="text-danger">Low Stock</option>
+                                <option class="text-warning">Expiring Soon</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-success"><i class="bi bi-download"></i> Export CSV</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Medicine & Batch</th>
+                        <th>Category</th>
+                        <th>Current Qty</th>
+                        <th>Expiry Date</th>
+                        <th>Status</th>
+                        <th>Last Updated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <span class="fw-bold">Insulin Glargine</span><br>
+                            <small class="text-muted">Batch: #IG-990</small>
+                        </td>
+                        <td>Injection</td>
+                        <td class="fw-bold text-danger">04</td>
+                        <td>12 Nov 2026</td>
+                        <td><span class="badge bg-danger">Critical Low</span></td>
+                        <td>2 hours ago</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="fw-bold">Cetirizine Syrup</span><br>
+                            <small class="text-muted">Batch: #CZ-441</small>
+                        </td>
+                        <td>Syrup</td>
+                        <td class="fw-bold">140</td>
+                        <td class="text-warning fw-bold">15 May 2026</td>
+                        <td><span class="badge bg-warning text-dark">Expiring (30 Days)</span></td>
+                        <td>1 day ago</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="fw-bold">Vitamin C 500mg</span><br>
+                            <small class="text-muted">Batch: #VC-221</small>
+                        </td>
+                        <td>Tablet</td>
+                        <td class="fw-bold">850</td>
+                        <td>01 Jan 2028</td>
+                        <td><span class="badge bg-success">Healthy</span></td>
+                        <td>Just now</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

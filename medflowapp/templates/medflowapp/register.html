@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedFlow | System Registration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f4f7f6 0%, #e3f2fd 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 0;
+            margin: 0;
+        }
+
+        .register-card {
+            width: 100%;
+            max-width: 500px; /* Slightly wider for registration fields */
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            background: white;
+            overflow: hidden;
+        }
+
+        .register-header {
+            background-color: #3498db; /* Blue theme for Registration to differentiate from Login */
+            padding: 25px;
+            text-align: center;
+            color: white;
+        }
+
+        .register-header i {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+        }
+
+        .form-control:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+        }
+
+        .btn-register {
+            background-color: #3498db;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .btn-register:hover {
+            background-color: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .footer-text {
+            font-size: 0.85rem;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+
+<div class="register-card">
+    <div class="register-header">
+        <i class="bi bi-person-plus"></i>
+        <h3 class="m-0 fw-bold">Create Account</h3>
+        <!-- <p class="small opacity-75">Join the MedFlow Network</p> -->
+    </div>
+
+    <div class="p-4 p-md-5">
+            
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label class="form-label text-muted small fw-bold">Full Name</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-person-vcard"></i></span>
+                        <input type="text" class="form-control border-start-0" id="name" name="name" placeholder="John Doe" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold">Email Address</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                    <input type="email" class="form-control border-start-0" id="email" name="email" placeholder="name@pharmacy.com" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted small fw-bold">Assign Role</label>
+                    <select class="form-select" id="role" name="role" required>
+                        <option value="" selected disabled>Select Role</option>
+                        <option value="Administrator">Administrator</option>
+                        <option value="Staff">Staff</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted small fw-bold">Employee ID</label>
+                    <input type="text" id="emp_id" name="emp_id" class="form-control" placeholder="MF-2026" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted small fw-bold">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <label class="form-label text-muted small fw-bold">Confirm Password</label>
+                    <input type="password" class="form-control" id="confirmPassword" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="terms" required>
+                    <label class="form-check-label small text-muted" id="check" for="terms">
+                        I agree to the <a href="#" class="text-decoration-none text-primary">System Privacy Policy</a>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-register w-100 text-white" onclick="register()">
+                <i class="bi bi-check-circle me-2"></i> REGISTER USER
+            </button>
+
+            <div class="text-center mt-4">
+                <p class="small text-muted">Already have an account? <a href="login/" class="text-decoration-none text-primary fw-bold">Login Here</a></p>
+            </div>
+
+        <div class="text-center mt-3 footer-text border-top pt-3">
+            <!-- &copy; 2026 MedFlow Systems | Privacy & Security -->
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('registerForm').onsubmit = function(e) {
+        const pass = document.getElementById('password').value;
+        const confirm = document.getElementById('confirmPassword').value;
+
+        if (pass !== confirm) {
+            e.preventDefault();
+            alert("Passwords do not match!");
+            return;
+        }
+
+        const btn = document.querySelector('.btn-register');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Creating Account...';
+        btn.classList.add('disabled');
+    };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    function register(){
+        var name = $('#name').val()
+        var email = $('#email').val()
+        var role = $('#role').val()
+        var emp_id = $('#emp_id').val()
+        var password = $('#password').val()
+        
+        $.ajax({
+            method:'POST',
+            url:"/register/",
+            data:{
+                "name": name,
+                "email":email,
+                "role": role,
+                "emp_id": emp_id,
+                "password": password
+            },
+            success: function(data) {
+                // Function to call if the request succeeds
+                alert('registered successfully');
+                location.href='/login/'
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                // Function to call if the request fails
+                console.log(textStatus, errorThrown);
+            }
+        })
+    }
+</script>
+</body>
+</html>

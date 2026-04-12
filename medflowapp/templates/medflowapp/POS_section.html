@@ -1,0 +1,140 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div id="pos-module" class="module-content"> <!--d-none-->
+    <div class="row g-3">
+        <div class="col-md-7">
+            <div class="table-container mb-3 border-start border-4 border-primary">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold m-0 text-primary"><i class="bi bi-person-circle"></i> Customer Information</h6>
+                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                        <i class="bi bi-plus"></i> New Customer
+                    </button>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" class="form-control border-start-0" placeholder="Search customer by Phone Number or Name...">
+                        </div>
+                        <div id="customerDetails" class="mt-2 small text-muted d-none">
+                            <span class="badge bg-light text-dark border"><i class="bi bi-check-circle-fill text-success"></i> Patient: Jane Smith</span>
+                            <span class="ms-2">ID: #CUS-4492</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <h6 class="fw-bold mb-3"><i class="bi bi-search"></i> Find Medicines</h6>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" placeholder="Type medicine name (e.g., Panadol)...">
+                    <button class="btn btn-success"><i class="bi bi-plus-lg"></i></button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Medicine</th>
+                                <th>Stock</th>
+                                <th>Price</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <strong>Augmentin 625mg</strong><br>
+                                    <small class="text-muted">Exp: 10/2026</small>
+                                </td>
+                                <td><span class="badge bg-success-subtle text-success">85 Left</span></td>
+                                <td>$15.00</td>
+                                <td><button class="btn btn-sm btn-success">Add</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="table-container sticky-top" style="top: 20px;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold m-0 text-success">Current Bill</h5>
+                    <span class="text-muted small">Inv: #INV-00892</span>
+                </div>
+                
+                <div class="pos-cart border-bottom mb-3">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr class="small text-uppercase text-muted">
+                                <th>Item</th>
+                                <th width="80">Qty</th>
+                                <th class="text-end">Total</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Panadol Extra</td>
+                                <td><input type="number" class="form-control form-control-sm" value="2"></td>
+                                <td class="text-end fw-semibold">$10.00</td>
+                                <td class="text-end"><i class="bi bi-x-circle text-danger cursor-pointer"></i></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-light p-3 rounded-3 mb-3">
+                    <div class="d-flex justify-content-between mb-2 small">
+                        <span>Subtotal:</span> <span class="fw-bold">$10.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 small">
+                        <span>GST (12%):</span> <span class="fw-bold">$1.20</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between text-success">
+                        <span class="fw-bold h5">Total Payable:</span> 
+                        <span class="fw-bold h4">$11.20</span>
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-6">
+                        <button class="btn btn-outline-secondary w-100 py-2"><i class="bi bi-x-lg"></i> Clear</button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-success w-100 py-2 fw-bold" onclick="window.print()">
+                            <i class="bi bi-printer"></i> PRINT BILL
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addCustomerModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-primary text-white">
+                <h6 class="modal-title">New Customer Profile</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Full Name</label>
+                        <input type="text" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Phone Number</label>
+                        <input type="tel" class="form-control form-control-sm" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm w-100">Save Customer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
