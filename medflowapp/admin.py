@@ -7,5 +7,5 @@ admin.site.register(Employee, EmployeeAdmin)
 
 # admin.site.register(Customers)
 class MedicineAdmin(admin.ModelAdmin):
-    list_display=('medicine_name', 'med_category', 'expiry_date', 'stock_status','price', 'quantity')
+    list_display=('id','medicine_name', 'med_category', 'expiry_date', 'stock_status','price', 'quantity')
 admin.site.register(Medicines, MedicineAdmin)

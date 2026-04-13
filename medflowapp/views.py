@@ -71,10 +71,10 @@ def delete_medicine(request):
     med_ID.delete()
     return JsonResponse({"status": 200})
 
-def update_medicine_page(request, med_ID):
-    med_ID = Medicines.objects.get(id=med_ID)
-    print(f"Medicine ID : {med_ID}")
-    return render(request, 'medflowapp/medicine_section.html', {"medicine":med_ID})
+def update_medicine_page(request, medicineid):
+    medicine_ID = Medicines.objects.get(id=medicineid)
+    print(f"Medicine ID : {medicine_ID}")
+    return render(request, 'medflowapp/update_medicine.html', {"medicine_ID":medicine_ID})
     
 @csrf_exempt
 def update_med_info(request):

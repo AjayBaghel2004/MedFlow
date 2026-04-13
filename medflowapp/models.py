@@ -24,8 +24,8 @@ class Medicines(models.Model):
         'INJ': 'INJ'
     }
     status = {
-        "Out of Stock": "Out of Stock",
-        "Overstock":"Overstock",
+        "Out-of-Stock": "Out-of-Stock",
+        "In-stock":"In-stock",
     }
     med_category = models.CharField(choices=category, default="----")
     stock_status = models.CharField(choices=status, default='Overstock')
