@@ -36,7 +36,7 @@ class Medicines(models.Model):
     }
     med_category = models.CharField(choices=category, default="----")
     stock_status = models.CharField(choices=status, default='In-stock')
-    price=models.DecimalField(max_digits=11, decimal_places=2)
+    price=models.DecimalField(max_digits=11, decimal_places=2, default=0.00)
     quantity = models.IntegerField()
 
 class Suppliers(models.Model):
@@ -48,21 +48,21 @@ class Suppliers(models.Model):
 class Purchases(models.Model):
     supplier_ID = models.ForeignKey(Suppliers, on_delete=models.CASCADE)
     medicine_ID = models.ForeignKey(Medicines, on_delete=models.CASCADE)
-    quantity_received = models.IntegerField()
+    quantity_received = models.IntegerField(default=0)
     cost_price=models.FloatField()
     purchase_date=models.DateTimeField(default=timezone.now())
 
 class Sales(models.Model):
     invoice_number=models.CharField()
     employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    subtotal=models.DecimalField(max_digits=11, decimal_places=2)
-    gst_amount = models.DecimalField(max_digits=11, decimal_places=2)
-    total_amount=models.DecimalField(max_digits=11, decimal_places=2)
+    subtotal=models.DecimalField(max_digits=11, decimal_places=2, default=0.00)
+    gst_amount = models.DecimalField(max_digits=11, decimal_places=2, default=0.00)
+    total_amount=models.DecimalField(max_digits=11, decimal_places=2, default=0.00)
     sale_date = models.DateTimeField(default=timezone.now())
 
 class SalesItems(models.Model):
     medicine_ID = models.ForeignKey(Medicines, on_delete=models.CASCADE)
-    sale_ID = models.ForeignKey(Sales, on_delete=models.CASCADE)
-    quantity_sold = models.IntegerField()
-    unit_price=models.DecimalField(max_digits=11, decimal_places=2)
-    total_price = models.DecimalField(max_digits=11, decimal_places=2)
+    sale_ID = models.ForeignKey(Sales,default=0,  on_delete=models.CASCADE)
+    quantity_sold = models.IntegerField(default=0)
+    unit_price=models.DecimalField(max_digits=11, decimal_places=2, default=0.00)
+    total_price = models.DecimalField(max_digits=11, decimal_places=2, default=0.00)
