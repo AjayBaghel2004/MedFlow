@@ -35,7 +35,7 @@ class Medicines(models.Model):
         "In-stock":"In-stock",
     }
     med_category = models.CharField(choices=category, default="----")
-    stock_status = models.CharField(choices=status, default='Overstock')
+    stock_status = models.CharField(choices=status, default='In-stock')
     price=models.DecimalField(max_digits=11, decimal_places=2)
     quantity = models.IntegerField()
 

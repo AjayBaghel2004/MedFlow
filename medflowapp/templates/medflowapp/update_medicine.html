@@ -6,7 +6,7 @@
 
 
                     <!-- Hidden ID -->
-                    <input type="hidden" id="med_ID" value="{{medicine_ID}}">
+                    <input type="hidden" id="med_ID" value="{{medicine_ID.id}}">
 
                     <!-- Medicine Name -->
                     <div class="mb-3">
@@ -65,7 +65,7 @@
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">
                     Cancel
                 </button>
-                <button type="button" class="btn btn-success px-4" onclick="update_medicine()"><a href="/update-medicine/"></a>
+                <button type="button" class="btn btn-success px-4" onclick="update_medicine()">
                     Save Entry
                 </button>
             </div>
@@ -77,6 +77,32 @@
     integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
-    
+    function update_medicine() {
+        var med_ID=$("#med_ID").val()
+        var expiry_date = $('#expiry_date').val()
+        var quantity = $('#quantity').val()
+        var stock_status = $('#stock_status').val()
+        var price = $('#price').val()
+
+        $.ajax({
+            method: "POST",
+            url: "/update-medicine/",
+            data: {
+                "med_ID": med_ID,
+                "expiry_date": expiry_date,
+                "quantity": quantity,
+                "stock_status": stock_status,
+                "price": price
+            },
+            success: function () {
+                alert("Medicine updated successfully")
+                location.href = "/medicine/"
+            },
+            error: function () {
+                alert("Medicine information not updated")
+            }
+        })
+
+    }
 </script>
 {% endblock %}

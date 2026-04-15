@@ -8,6 +8,7 @@ admin.site.register(Employee, EmployeeAdmin)
 class CustomerAdmin(admin.ModelAdmin):
     list_display=('id', 'customer_name', 'customer_phone', 'customer_email', 'customer_address', 'created_at')
 admin.site.register(Customers, CustomerAdmin)
+
 class MedicineAdmin(admin.ModelAdmin):
     list_display=('id','medicine_name', 'med_category', 'expiry_date', 'stock_status','price', 'quantity')
 admin.site.register(Medicines, MedicineAdmin)
