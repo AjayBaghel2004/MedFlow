@@ -48,7 +48,7 @@
                                     <small class="text-muted">Exp: 10/2026</small>
                                 </td>
                                 <td><span class="badge bg-success-subtle text-success">85 Left</span></td>
-                                <td>$15.00</td>
+                                <td>&#8377; 15.00</td>
                                 <td><button class="btn btn-sm btn-success">Add</button></td>
                             </tr>
                         </tbody>
@@ -78,7 +78,7 @@
                             <tr>
                                 <td>Panadol Extra</td>
                                 <td><input type="number" class="form-control form-control-sm" value="2"></td>
-                                <td class="text-end fw-semibold">$10.00</td>
+                                <td class="text-end fw-semibold">&#8377; 10.00</td>
                                 <td class="text-end"><i class="bi bi-x-circle text-danger cursor-pointer"></i></td>
                             </tr>
                         </tbody>
@@ -87,15 +87,15 @@
 
                 <div class="bg-light p-3 rounded-3 mb-3">
                     <div class="d-flex justify-content-between mb-2 small">
-                        <span>Subtotal:</span> <span class="fw-bold">$10.00</span>
+                        <span>Subtotal:</span> <span class="fw-bold">&#8377; 10.00</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2 small">
-                        <span>GST (12%):</span> <span class="fw-bold">$1.20</span>
+                        <span>GST (12%):</span> <span class="fw-bold">&#8377; 1.20</span>
                     </div>
                     <hr>
                     <div class="d-flex justify-content-between text-success">
                         <span class="fw-bold h5">Total Payable:</span> 
-                        <span class="fw-bold h4">$11.20</span>
+                        <span class="fw-bold h4">&#8377; 11.20</span>
                     </div>
                 </div>
 
@@ -125,16 +125,45 @@
                 <form>
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Full Name</label>
-                        <input type="text" class="form-control form-control-sm" required>
+                        <input type="text" id="customer_name" class="form-control form-control-sm" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Phone Number</label>
-                        <input type="tel" class="form-control form-control-sm" required>
+                        <input type="tel" id="phone_number" class="form-control form-control-sm" required>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-sm w-100">Save Customer</button>
+                    <button type="submit" class="btn btn-primary btn-sm w-100" onclick="add_customer()">Save Customer</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block script %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+    integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+    function add_customer(){
+        let customer_name = $('#customer_name').val()
+        let customer_phone = $('#phone_number').val()
+        $.ajax({
+            method:"POST",
+            url:"/add_customer/",
+            data:{
+                "customer_name":customer_name,
+                "phone_number": phone_number
+            },
+            success:function(){
+                alert('New Customer added.')
+                location.href='/point-of-sale/'
+            },
+            error: function(){
+                alert("Custmer Not Added")
+            }
+        })
+    }
+
+</script>
 {% endblock %}

@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import request, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Employee, Medicines
+from .models import Employee, Medicines, Customers
 import traceback
 # Create your views here.
 def register(request):
@@ -91,3 +91,9 @@ def update_med_info(request):
     except:
         import traceback
         traceback.print_exc()
+
+@csrf_exempt
+def add_customer(request):
+    data=request.POST.dict()
+    Customers.objects.create(customer_name=data['customer_name'], customer_phone=data['phone_number'])
+    return JsonResponse({"status":200})

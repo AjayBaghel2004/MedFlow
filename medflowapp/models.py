@@ -16,7 +16,6 @@ class Employee(models.Model):
 class Customers(models.Model):
     customer_name = models.CharField(max_length=100)
     customer_phone = models.IntegerField()
-    customer_email = models.EmailField(max_length=100)
     customer_address = models.TextField()
     created_at = models.DateTimeField(default=timezone.now())
 

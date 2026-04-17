@@ -113,6 +113,7 @@
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <!-- <script>
 </script> -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
     integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -149,20 +150,37 @@
 
     //delete medicine
     function delete_medicine(medicine_ID) {
-        $.ajax({
-            method: "POST",
-            url: '/delete-medicine/',
-            data: {
-                "medicine_ID": medicine_ID
-            },
-            success: function () {
-                // alert("Medicine Deleted")
-                location.href = '/medicine/'
-            },
-            error: function () {
-                alert("Medicine not deleted")
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!"
+            }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    method: "POST",
+                    url: '/delete-medicine/',
+                    data: {
+                        "medicine_ID": medicine_ID
+                    },
+                    success: function (response) {
+                        // alert("Medicine Deleted")
+                        Swal.fire(
+                            'Deleted',
+                            "Medicine Deleted Successfully",
+                            "Success"
+                        )
+                        location.href = '/medicine/'
+                    },
+                    error: function () {
+                        alert("Medicine not deleted")
+                    }
+                })
             }
-        })
+        })        
     }
     
 </script>
