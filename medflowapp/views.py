@@ -21,7 +21,8 @@ def medicine(request):
     return render(request, 'medflowapp/medicine_section.html', {"medicines": medicines})
 
 def pos_billing(request):
-    return render(request, 'medflowapp/POS_section.html')
+    customer_details = Customers.objects.all()
+    return render(request, 'medflowapp/POS_section.html', {"customer_details":customer_details})
 
 def inventory(request):
     return render(request, 'medflowapp/inventory.html')
@@ -97,4 +98,11 @@ def add_customer(request):
     data=request.POST.dict()
     print(f"Customer Data : {data}")
     Customers.objects.create(customer_name=data['customer_name'], customer_phone=data['phone_number'])
+    return JsonResponse({"status":200})
+
+@csrf_exempt
+def remove_customer(request):
+    data=request.POST.dict()
+    customer_ID = Customers.objects.get(id=data['customer_ID'])
+    customer_ID.delete()
     return JsonResponse({"status":200})
