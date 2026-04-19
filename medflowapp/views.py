@@ -95,5 +95,6 @@ def update_med_info(request):
 @csrf_exempt
 def add_customer(request):
     data=request.POST.dict()
+    print(f"Customer Data : {data}")
     Customers.objects.create(customer_name=data['customer_name'], customer_phone=data['phone_number'])
     return JsonResponse({"status":200})
