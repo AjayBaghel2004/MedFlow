@@ -22,7 +22,8 @@ def medicine(request):
 
 def pos_billing(request):
     customer_details = Customers.objects.all()
-    return render(request, 'medflowapp/POS_section.html', {"customer_details":customer_details})
+    medicine = Medicines.objects.all()
+    return render(request, 'medflowapp/POS_section.html', {"customer_details":customer_details , "medicine":medicine})
 
 def inventory(request):
     return render(request, 'medflowapp/inventory.html')

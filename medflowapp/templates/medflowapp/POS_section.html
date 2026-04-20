@@ -26,6 +26,16 @@
                         <div id="customerDetails" class="mt-3 p-2 border rounded bg-light shadow-sm">
                             {% for customer in customer_details %}
                             <div class="d-flex flex-wrap align-items-center gap-3">
+                                <!-- <div>
+                                    <span class="fw-bold text-dark">Anirudha</span>
+                                    <small class="text-muted ms-2">+91 98765-43210</small>
+                                    <br>
+                                    <small class="text-muted" style="font-size: 0.75rem;">ID: #CUS-4492</small>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary px-3 py-1 fw-bold"
+                                    onclick="selectCustomer('Anirudha', '#CUS-4492', '+91 98765-43210')">
+                                    SELECT <i class="bi bi-chevron-right"></i>
+                                </button> -->
                                 <!-- <span
                                     class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
                                     <i class="bi bi-person-check-fill me-1"></i> Active Patient
@@ -54,6 +64,10 @@
                                         onclick="remove_customer('{{customer.id}}')">
                                         <i class="bi bi-x-circle-fill"></i>
                                     </button>
+                                    <button class="btn btn-sm  px-3 py-1 fw-bold"
+                                    onclick="selectCustomer('{{customer.customer_name}}', '#CUS-{{customer.id}}', '+91 {{customer.customer_phone}}')">
+                                     <i class="fa-solid fa-circle-check"></i>
+                                </button>
                                 </div>
                             </div>
                             {% endfor %}
@@ -96,11 +110,31 @@
 
         <div class="col-md-5">
             <div class="table-container sticky-top" style="top: 20px;">
-                <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
                     <h5 class="fw-bold m-0 text-success">Current Bill</h5>
                     <span class="text-muted small">Inv: #INV-00892</span>
                 </div>
 
+                <div id="activeCustomerInBill"
+                    class="mb-3 p-2 border-start border-4 border-success bg-light-subtle rounded-end d-none">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="m-0 small fw-bold text-uppercase text-muted" style="font-size: 0.65rem;">Billing
+                                To:</p>
+                            <span id="billCustomerName" class="fw-bold text-dark">Anirudha</span>
+                            <span id="billCustomerID" class="small text-muted ms-1">(#CUS-4492)</span>
+                        </div>
+                        <button class="btn btn-sm text-danger" onclick="removeCustomerFromBill()"><i
+                                class="bi bi-x"></i></button>
+                    </div>
+                </div>
+
+                <div id="guestLabel" class="mb-3 small text-muted italic">
+                    <i class="bi bi-person-dash"></i> Walk-in Guest Mode
+                </div>
+
+                <div class="pos-cart border-bottom mb-3">
+                </div>
                 <div class="pos-cart border-bottom mb-3">
                     <table class="table table-sm align-middle">
                         <thead>
@@ -219,20 +253,36 @@
                 },
                 success: function () {
                     //alert("Customer Removed.")
-                    location.href='/point-of-sale/'
+                    location.href = '/point-of-sale/'
                 },
                 error: function () {
                     Swal.fire(
-                            'Deleted',
-                            "Customer Deleted Successfully",
-                            "Success"
-                        )
+                        'Deleted',
+                        "Customer Deleted Successfully",
+                        "Success"
+                    )
                     alert("Customer Not Removed.")
                 }
             }));
         });
 
     }
+    function selectCustomer(name, id, phone) {
+        // 1. Fill the details in the Bill Section
+        document.getElementById('billCustomerName').innerText = name;
+        document.getElementById('billCustomerID').innerText = '(' + id + ')';
 
+        // 2. Toggle Visibility
+        document.getElementById('activeCustomerInBill').classList.remove('d-none');
+        document.getElementById('guestLabel').classList.add('d-none');
+
+        // 3. Optional: Visual feedback
+        console.log("Customer " + name + " linked to Invoice.");
+    }
+
+    function removeCustomerFromBill() {
+        document.getElementById('activeCustomerInBill').classList.add('d-none');
+        document.getElementById('guestLabel').classList.remove('d-none');
+    }
 </script>
 {% endblock %}
