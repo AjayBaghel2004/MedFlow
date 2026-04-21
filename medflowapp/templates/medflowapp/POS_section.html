@@ -93,15 +93,17 @@
                             </tr>
                         </thead>
                         <tbody>
+                            {% for md in medicine %}
                             <tr>
                                 <td>
-                                    <strong>Augmentin 625mg</strong><br>
-                                    <small class="text-muted">Exp: 10/2026</small>
+                                    <strong id="medicine_name">{{md.medicine_name}}</strong><br>
+                                    <small class="text-muted">{{md.expiry_date}}</small>
                                 </td>
-                                <td><span class="badge bg-success-subtle text-success">85 Left</span></td>
-                                <td>&#8377; 15.00</td>
-                                <td><button class="btn btn-sm btn-success">Add</button></td>
+                                <td><span class="badge bg-success-subtle text-success" id="quantity">{{md.quantity}} Left</span></td>
+                                <td id="price">&#8377;{{md.price}}</td>
+                                <td><button class="btn btn-sm btn-success" onclick="selectMedicine('{{md.medicine_name}}','{{md.quantity}}','{{md.price}}' )">Add</button></td>
                             </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -121,8 +123,8 @@
                         <div>
                             <p class="m-0 small fw-bold text-uppercase text-muted" style="font-size: 0.65rem;">Billing
                                 To:</p>
-                            <span id="billCustomerName" class="fw-bold text-dark">Anirudha</span>
-                            <span id="billCustomerID" class="small text-muted ms-1">(#CUS-4492)</span>
+                            <span id="billCustomerName" class="fw-bold text-dark"></span>
+                            <span id="billCustomerID" class="small text-muted ms-1"></span>
                         </div>
                         <button class="btn btn-sm text-danger" onclick="removeCustomerFromBill()"><i
                                 class="bi bi-x"></i></button>
@@ -135,7 +137,7 @@
 
                 <div class="pos-cart border-bottom mb-3">
                 </div>
-                <div class="pos-cart border-bottom mb-3">
+                <div id="medicines_list" class="pos-cart border-bottom mb-3 d-none">
                     <table class="table table-sm align-middle">
                         <thead>
                             <tr class="small text-uppercase text-muted">
@@ -147,9 +149,9 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Panadol Extra</td>
-                                <td><input type="number" class="form-control form-control-sm" value="2"></td>
-                                <td class="text-end fw-semibold">&#8377; 10.00</td>
+                                <td id="medicine_name"></td>
+                                <td><input type="number" id="quantity" class="form-control form-control-sm" value="0"></td>
+                                <td id="price" class="text-end fw-semibold">&#8377; </td>
                                 <td class="text-end"><i class="bi bi-x-circle text-danger cursor-pointer"></i></td>
                             </tr>
                         </tbody>
@@ -283,6 +285,17 @@
     function removeCustomerFromBill() {
         document.getElementById('activeCustomerInBill').classList.add('d-none');
         document.getElementById('guestLabel').classList.remove('d-none');
+    }
+
+    function selectMedicine(medicine_name, quantity, price){
+        document.getElementById('medicine_name').InnerText = medicine_name;
+        document.getElementById('quantity').InnerText = quantity;
+        document.getElementById('price').InnerText = price;
+        document.getElementById('medicines_list').classList.remove('d-none');
+    }
+
+    function removeMedicineFromList(){
+        document.getElementById('')
     }
 </script>
 {% endblock %}

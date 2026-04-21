@@ -52,12 +52,12 @@ class Purchases(models.Model):
     purchase_date=models.DateTimeField(default=timezone.now())
 
 class Sales(models.Model):
-    invoice_number=models.CharField()
+    invoice_number=models.IntegerField()
     employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
     subtotal=models.DecimalField(max_digits=11, decimal_places=2, default=0.00)
     gst_amount = models.DecimalField(max_digits=11, decimal_places=2, default=0.00)
     total_amount=models.DecimalField(max_digits=11, decimal_places=2, default=0.00)
-    sale_date = models.DateTimeField(default=timezone.now())
+    sale_date = models.DateTimeField(default = timezone.now())
 
 class SalesItems(models.Model):
     medicine_ID = models.ForeignKey(Medicines, on_delete=models.CASCADE)
