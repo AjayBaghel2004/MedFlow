@@ -8,8 +8,10 @@ class Employee(AbstractUser):
         "Administrator":"Administrator",
         "Staff":"Staff"
     }
-    role=models.CharField(choices=roles_choices)
+    role=models.CharField(max_length=20, choices=roles_choices)
     created_at = models.DateTimeField(default=timezone.now)
+    def __str__(self):
+        return self.username
 
 class Customer(models.Model):
     phone_regex=RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Format: '+999999999'")
@@ -46,7 +48,7 @@ class Supplier(models.Model):
     phone_regex=RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Format: '+999999999'")
     supplier_name=models.CharField(max_length=50)
     supplier_contact = models.CharField(validators=[phone_regex],max_length=17, unique=True)
-    supplier_person = models.CharField()
+    supplier_person = models.CharField(max_length=100)
     supplier_address=models.TextField()
 
 class Purchase(models.Model):

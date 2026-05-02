@@ -7,25 +7,25 @@
         <div class="col-md-3">
             <div class="card stat-card p-3">
                 <small class="text-muted">Total Medicines</small>
-                <h3 class="fw-bold">1,240</h3>
+                <h3 class="fw-bold">{{ total_medicines }}</h3>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card stat-card p-3 border-danger">
                 <small class="text-muted">Low Stock Alerts</small>
-                <h3 class="fw-bold text-danger">12</h3>
+                <h3 class="fw-bold text-danger">{{ low_stock_count }}</h3>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card stat-card p-3 border-primary">
                 <small class="text-muted">Today's Sales</small>
-                <h3 class="fw-bold text-primary">$4,250</h3>
+                <h3 class="fw-bold text-primary">{{ today_sales }}</h3>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card stat-card p-3 border-warning">
                 <small class="text-muted">Expiring Soon</small>
-                <h3 class="fw-bold text-warning">08</h3>
+                <h3 class="fw-bold text-warning">{{ expiring_soon }}</h3>
             </div>
         </div>
     </div>
@@ -41,17 +41,50 @@
             <div class="table-container">
                 <h5 class="fw-bold mb-3 text-danger"><i class="bi bi-bell"></i> Critical Alerts</h5>
                 <ul class="list-group list-group-flush">
+                    {% for med in critical_medicines %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Paracetamol 500mg
-                        <span class="badge bg-danger rounded-pill">Out of Stock</span>
+                        {{ med.medicine_name }}
+                        <span class="badge bg-danger rounded-pill">{{ med.quantity }}</span>
                     </li>
+                    {% empty %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Amoxicillin (Batch #44)
-                        <span class="badge bg-warning text-dark rounded-pill">Expiring In 5 Days</span>
+                        
+                        <span class="badge bg-warning text-dark rounded-pill">No critical stock alerts.</span>
                     </li>
+                    {% endfor %}
                 </ul>
             </div>
         </div>
     </div>
 </div>
+{% block script %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    new Chart(ctx, {
+        type:'line',
+        data:{
+            labels: {{ chart_labels|safe }},
+            datasets:[{
+                label:'Daily Revenue(₹)',
+                data:{{ chart_data|safe }},
+                borderColor: '#2ecc71',
+                backgroundColor: 'rgba(46,204, 113, 0.1)',
+                fill: true,
+                tension:0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins:{ legend: {display:false } },
+            scales:{
+                y:{
+                    beginAtZero:true,
+                    ticks: { callback: value => '₹' + value }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
 {% endblock %}

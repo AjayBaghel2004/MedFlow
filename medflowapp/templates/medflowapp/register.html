@@ -111,10 +111,10 @@
                         <option value="Staff">Staff</option>
                     </select>
                 </div>
-                <div class="col-md-6 mb-3">
+                <!-- <div class="col-md-6 mb-3">
                     <label class="form-label text-muted small fw-bold">Employee ID</label>
                     <input type="text" id="emp_id" name="emp_id" class="form-control" placeholder="MF-2026" required>
-                </div>
+                </div> -->
             </div>
 
             <div class="row">
@@ -173,7 +173,6 @@
         var name = $('#name').val()
         var email = $('#email').val()
         var role = $('#role').val()
-        var emp_id = $('#emp_id').val()
         var password = $('#password').val()
         
         $.ajax({
@@ -183,8 +182,8 @@
                 "name": name,
                 "email":email,
                 "role": role,
-                "emp_id": emp_id,
-                "password": password
+                "password": password,
+                "csrfmiddlewaretoken": "{{ csrf_token }}"
             },
             success: function(data) {
                 // Function to call if the request succeeds

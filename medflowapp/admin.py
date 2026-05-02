@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import Employee, Medicine, Customer, Supplier, Purchase, Sale, SaleItem
 # Register your models here.
 class EmployeeAdmin(admin.ModelAdmin):
-    list_display = ('id','name', 'email', 'role', 'password', 'created_at')
+    list_display = ('id', 'role', 'password', 'created_at')
 admin.site.register(Employee, EmployeeAdmin)
 
 class CustomerAdmin(admin.ModelAdmin):

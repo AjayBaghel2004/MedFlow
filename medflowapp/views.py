@@ -1,6 +1,9 @@
 from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login as auth_login
 from django.http import request, JsonResponse
 from django.db import transaction
+from django.db.models import Sum
 from django.views.decorators.csrf import csrf_exempt
 from .models import Employee, Medicine, Customer
 import traceback
@@ -11,11 +14,43 @@ def register(request):
 def login(request):
     return render(request, 'medflowapp/login.html')
 
+@login_required(login_url='/login/')
 def dashboard(request):
-    if request.session.get('userId'):
-        return render(request, 'medflowapp/dashboard.html')
-    else:
-        redirect('/')
+    total_medicines = Medicine.objects.count() #Total Medicines in inventory
+    low_stock_count = Medicine.objects.filter(quantity__lt=10).count()
+    today = timezone.now().date() # today sales revenue
+    today_sales = Sale.objects.filter(created_at__date = today).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    next_month = today + timezone.timedelta(days=30)
+    #expiring Soon  in the nxt 30 days
+    expiring_soon = Medicine.objects.filter(expiry_date__range = [today, next_month]).count()
+    # Recent critical alerts
+    critical_medicines = Medicine.objects.filter(quantity__lt=5)[:5]
+
+    context = {
+        "total_medicines":total_medicines,
+        "low_stock_count":low_stock_count,
+        "today_sales":today_sales,
+        "expiring_soon": expiring_soon,
+        "critical_medicines":critical_medicines,
+    }
+
+    #weekly sales data for Chart
+    last_7_days =[]
+    sales_data = []
+    today = timezone.now().date()
+    for i in range(6,-1,-1):
+        day = today - timedelta(days=i)
+        last_7_days.append(day.strftime("%a"))
+        # Sum total_amount for all sales on this specific day
+        daily_total = Sale.objects.filter(created_at__date=day).aggregate(Sum("total_amount"))['total_amount__sum'] or 0
+        sales_data.append(float(daily_total))
+
+        context.update({
+            "chart_labels":last_7_days,
+            "chart_data":sales_data,
+        })
+
+    return render(request, "medflowapp/dashboard.html", context)
 
 def medicine(request):
     medicines = Medicine.objects.all()
@@ -35,34 +70,47 @@ def purchases(request):
 def reports_section(request):
     return render(request, 'medflowapp/report_section.html')
 
-@csrf_exempt
 def register_user(request):
-    data = request.POST.dict()
-    print(data, '...........')
-    Employee.objects.create_user(name = data['name'], email=data['email'], role=data['role'],password=data['password'])
-    return JsonResponse({"status":200})
+    if request.method == "POST":
+        try:
+            name = request.POST.get('name')
+            email= request.POST.get('email')
+            role = request.POST.get('role')
+            password = request.POST.get('password')
+            # Validation: Ensure email is unique
+            if Employee.objects.filter(email=email).exists():
+                return JsonResponse({"status": 400 , "message":"Email already Registered"})
+            user = Employee.objects.create_user(
+                username = email,
+                email=email,
+                password=password,
+                first_name = name,
+                role=role,
+            )
+            return JsonResponse({"status":200 , "message":"Account Created Successfully"})
+        except Exception as e:
+            return JsonResponse({"status": 500, "message":str(e)})
 
 @csrf_exempt
 def login_user(request):
-    try:
-        login_credentials = request.POST.dict()
-        print(login_credentials)
-        if Employee.objects.filter(email=login_credentials['email'], password=login_credentials['password']).exists():
-            obj = Employee.objects.filter(email=login_credentials['email'], password=login_credentials['password']).last()
-            print(obj,'///////////////')
-            request.session['userId'] = obj.id
+    if request.method=="POST":
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        #Django`s authenticate function handles the hashed password comparison
+        user = authenticate(request, username=email, password=password)
+        if user is not None:
+            #This Creates the session and logs the user in properly
+            auth_login(request user)
             return JsonResponse({"status": 200})
         else:
-            return JsonResponse({"status": 403})
-    except:
-
-        traceback.print_exc()
+            return JsonResponse({"status":403, "message": "Invalid Credentials"})
 
 @csrf_exempt
 def add_medicine(request):
     data = request.POST.dict()
     print(data)
-    Medicine.objects.create(medicine_name = data['medicine_name'], expiry_date=data['expiry_date'], med_category=data['category'], stock_status=data['stock_status'], price=data['price'], quantity=data['quantity'])
+    Medicine.objects.create(medicine_name = data['medicine_name'], expiry_date=data['expiry_date'], med_category=data['category'], price=data['price'], quantity=data['quantity'])
     return JsonResponse({'status': 200})
 
 @csrf_exempt
