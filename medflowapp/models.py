@@ -1,25 +1,23 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
 
-class Employee(models.Model):
-    name = models.CharField(max_length=100)
-    email=models.EmailField(max_length=50)
+class Employee(AbstractUser):
     roles_choices={
         "Administrator":"Administrator",
         "Staff":"Staff"
     }
     role=models.CharField(choices=roles_choices)
-    employee_ID=models.PositiveIntegerField()
-    password=models.CharField(max_length=100)
-    created_at = models.DateTimeField(default=timezone.now())
+    created_at = models.DateTimeField(default=timezone.now)
 
-class Customers(models.Model):
+class Customer(models.Model):
+    phone_regex=RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Format: '+999999999'")
     customer_name = models.CharField(max_length=100)
-    customer_phone = models.IntegerField()
-    customer_address = models.TextField()
-    created_at = models.DateTimeField(default=timezone.now())
+    customer_phone = models.CharField(validators=[phone_regex], max_length=17, unique=True)
+    created_at = models.DateTimeField(default=timezone.now)
 
-class Medicines(models.Model):
+class Medicine(models.Model):
     medicine_name = models.CharField(max_length=50)
     expiry_date = models.DateField()
     category={
@@ -29,39 +27,58 @@ class Medicines(models.Model):
         'CAP':'CAP',
         'INJ': 'INJ'
     }
-    status = {
-        "Out-of-Stock": "Out-of-Stock",
-        "In-Stock":"In-Stock"
-    }
     med_category = models.CharField(choices=category, default="----")
-    stock_status = models.CharField(choices=status, default='In-stock')
     price=models.DecimalField(max_digits=11, decimal_places=2, default=0.00)
-    quantity = models.IntegerField()
+    quantity = models.PositiveIntegerField(default=0)
+    @property
+    def is_stock_available(self):
+        return "In-stock" if self.quantity > 0 else "Out-of-stock"
 
-class Suppliers(models.Model):
+    @property
+    def is_expired(self):
+        return self.expiry_date < timezone.now().date()
+
+    def __str__(self):
+        return self.medicine_name
+
+
+class Supplier(models.Model):
+    phone_regex=RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Format: '+999999999'")
     supplier_name=models.CharField(max_length=50)
-    supplier_contact = models.IntegerField()
+    supplier_contact = models.CharField(validators=[phone_regex],max_length=17, unique=True)
     supplier_person = models.CharField()
     supplier_address=models.TextField()
 
-class Purchases(models.Model):
-    supplier_ID = models.ForeignKey(Suppliers, on_delete=models.CASCADE)
-    medicine_ID = models.ForeignKey(Medicines, on_delete=models.CASCADE)
-    quantity_received = models.IntegerField(default=0)
-    cost_price=models.FloatField()
-    purchase_date=models.DateTimeField(default=timezone.now())
+class Purchase(models.Model):
+    supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT)
+    medicine = models.ForeignKey(Medicine, on_delete=models.PROTECT)
+    batch_number=models.CharField(max_length=50)
+    quantity_received = models.PositiveIntegerField(default=0)
+    cost_price=models.DecimalField(max_digits=11, decimal_places=2)
+    purchase_date=models.DateTimeField(default=timezone.now)
 
-class Sales(models.Model):
+class Sale(models.Model):
     invoice_number=models.IntegerField()
-    employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT)
+    employee = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True)
     subtotal=models.DecimalField(max_digits=11, decimal_places=2, default=0.00)
-    gst_amount = models.DecimalField(max_digits=11, decimal_places=2, default=0.00)
-    total_amount=models.DecimalField(max_digits=11, decimal_places=2, default=0.00)
-    sale_date = models.DateTimeField(default = timezone.now())
+    gst_amount = models.DecimalField(max_digits=5,decimal_places=2, default=12.00)
+    total_amount=models.DecimalField(max_digits=11, decimal_places=2, editable=False)
+    created_at = models.DateTimeField(default = timezone.now)
 
-class SalesItems(models.Model):
-    medicine_ID = models.ForeignKey(Medicines, on_delete=models.CASCADE)
-    sale_ID = models.ForeignKey(Sales,default=0,  on_delete=models.CASCADE)
+    def save(self, *args, **kwargs):
+        # Automatically calculate total based on subtotal and GST
+        tax_multiplier = 1 + (self.gst_amount / 100)
+        self.total_amount = self.subtotal * tax_multiplier
+        super().save(*args, **kwargs)
+
+class SaleItem(models.Model):
+    medicine = models.ForeignKey(Medicine, on_delete=models.CASCADE)
+    sale = models.ForeignKey(Sale, related_name="items", on_delete=models.PROTECT)
     quantity_sold = models.IntegerField(default=0)
     unit_price=models.DecimalField(max_digits=11, decimal_places=2, default=0.00)
     total_price = models.DecimalField(max_digits=11, decimal_places=2, default=0.00)
+
+    def save(self, *args, **kwargs):
+        self.total_price = self.unit_price * self.quantity_sold
+        super().save(*args, **kwargs)

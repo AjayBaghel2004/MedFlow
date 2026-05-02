@@ -61,7 +61,7 @@
 
                                 <div class="ms-auto">
                                     <button type="button" class="btn btn-sm text-danger p-0" title="Remove Customer"
-                                        onclick="remove_customer('{{customer.id}}')">
+                                        onclick="remove_customer('{{customer.id}}')" >
                                         <i class="bi bi-x-circle-fill"></i>
                                     </button>
                                     <button class="btn btn-sm  px-3 py-1 fw-bold"
@@ -101,7 +101,7 @@
                                 </td>
                                 <td><span class="badge bg-success-subtle text-success" id="quantity">{{md.quantity}} Left</span></td>
                                 <td id="price">&#8377;{{md.price}}</td>
-                                <td><button class="btn btn-sm btn-success" onclick="selectMedicine('{{md.medicine_name}}','{{md.quantity}}','{{md.price}}' )">Add</button></td>
+                                <td><button class="btn btn-sm btn-success" onclick="selectMedicine('{{md.medicine_name}}','{{md.price}}' )">Add</button></td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -137,8 +137,8 @@
 
                 <div class="pos-cart border-bottom mb-3">
                 </div>
-                <div id="medicines_list" class="pos-cart border-bottom mb-3 d-none">
-                    <table class="table table-sm align-middle">
+                <div class="pos-cart border-bottom mb-3">
+                    <table  class="table table-sm align-middle">
                         <thead>
                             <tr class="small text-uppercase text-muted">
                                 <th>Item</th>
@@ -147,7 +147,7 @@
                                 <th></th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="medicines_list">
                             <tr>
                                 <td id="medicine_name"></td>
                                 <td><input type="number" id="quantity" class="form-control form-control-sm" value="0"></td>
@@ -160,15 +160,15 @@
 
                 <div class="bg-light p-3 rounded-3 mb-3">
                     <div class="d-flex justify-content-between mb-2 small">
-                        <span>Subtotal:</span> <span class="fw-bold">&#8377; 10.00</span>
+                        <span>Subtotal:</span> <span class="fw-bold" id = "subtotal_val">&#8377; 10.00</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2 small">
-                        <span>GST (12%):</span> <span class="fw-bold">&#8377; 1.20</span>
+                        <span>GST (12%):</span> <span class="fw-bold" id="gst_val">&#8377; 1.20</span>
                     </div>
                     <hr>
                     <div class="d-flex justify-content-between text-success">
                         <span class="fw-bold h5">Total Payable:</span>
-                        <span class="fw-bold h4">&#8377; 11.20</span>
+                        <span class="fw-bold h4" id="total_val">&#8377; 11.20</span>
                     </div>
                 </div>
 
@@ -177,8 +177,8 @@
                         <button class="btn btn-outline-secondary w-100 py-2"><i class="bi bi-x-lg"></i> Clear</button>
                     </div>
                     <div class="col-6">
-                        <button class="btn btn-success w-100 py-2 fw-bold" onclick="window.print()">
-                            <i class="bi bi-printer"></i> PRINT BILL
+                        <button class="btn btn-primary w-100 py-2 fw-bold mb-2" onclick="processSale()">
+                            <i class="bi bi-check-circle"></i> PRINT BILL
                         </button>
                     </div>
                 </div>
@@ -287,15 +287,96 @@
         document.getElementById('guestLabel').classList.remove('d-none');
     }
 
-    function selectMedicine(medicine_name, quantity, price){
-        document.getElementById('medicine_name').InnerText = medicine_name;
-        document.getElementById('quantity').InnerText = quantity;
-        document.getElementById('price').InnerText = price;
-        document.getElementById('medicines_list').classList.remove('d-none');
+    let cart=[];
+    function selectMedicine(name, price){
+        //1. Check if medicine already  in cart 
+        const exisitingItem = cart.find(item=> item.name===name)
+
+        if(exisitingItem){
+            exisitingItem += 1;
+            exisitingItem.total = existingItem.qty * parseFloat(existingItem.price)
+        } else {
+            //2. Add new Item
+            cart.push({
+                name:name,
+                price:parseFloat(price),
+                qty:1,
+                total:parseFloat(price)
+            });
+        }
+        renderCart();
+    }
+    function renderCart(){
+        const list = document.getElementById('medicines_list');
+        list.innerHTML='';
+        cart.forEach((item, index) => {
+            const row = `
+                 <tr>
+                    <td><strong>${item.name}</strong><td>
+                    <td><input type="number" class="form-control form-control-sm" value="${item.qty}" min="1" onchange="updateQty(${index}, this.value)"> </td>
+                    <td class="text-end">₹ ${item.total.toFixed(2)}</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm text-danger" onclick="removeItem(${index})"><i class="bi bi-x-circle"></i></button>
+                    </td>
+                </tr>
+            `;
+            list.insertAdjacentHTML('beforeend', row);
+        })
+        updateSummary();
+    }
+    function updateQty(index, newQty){
+        if (newQty<1) return;
+        cart[index].qty = parseInt(newQty);
+        cart[index].total = cart[index].qty * cart[index].price;
+        updateSummary();
+        renderCart();
+    }
+    function removeItem(index){
+        cart.splice(index, 1);
+        renderCart();
+    }
+    function updateSummary(){
+        let subtotal = cart.reduce((sum,  item) => sum + item.total, 0);
+        let gst = subtotal * 0.12
+        let total = subtotal + gst;
+
+        //Update summary Display
+        document.getElementById('subtotal_val').innerText = '₹' + subtotal.toFixed(2);
+        document.getElementById('gst_val').innerText = '₹' + gst.toFixed(2);
+        document.getElementById('total_val').innerText = '₹' + total.toFixed(2);
     }
 
-    function removeMedicineFromList(){
-        document.getElementById('')
+    function processSale(){
+        if (cart.length===0){
+            Swal.fire('Error', "Cart is empty!", 'Error');
+            return; 
+        }
+
+        const saleData = {
+            customer_name: document.getElementById('billCustomerName').innerText,
+            customer_ID: document.getElementById('billCustomerID').innerText,
+            items: cart,
+            subtotal:document.getElementById('subtotal_val').innerText.replace('₹', ''),
+            gst:document.getElementById('gst_val').innerText.replace('₹', ''),
+            total: document.getElementById('total_val').innerText.replace('₹', '')
+        };
+
+        $.ajax({
+            method:"POST",
+            url:"/complete-sale/",
+            data:JSON.stringify(saleData),
+            contentType:'application/json',
+            headers:{ "X-CSRFToken": "{{ csrf_token }}" },
+            success: function(response){
+                Swal.fire("sucess", "sale recorded ! Invoice: " + response.invoice, "success").then(() => {
+                    window.print();
+                    location.reload();
+                });
+            },
+            error: function(err){
+                Swal.fire("Error", "Transaction Failed", "error");
+            }
+        });
     }
 </script>
 {% endblock %}
