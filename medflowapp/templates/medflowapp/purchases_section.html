@@ -1,78 +1,75 @@
 {% extends 'layout/base.html' %}
 
 {% block content %}
- <div id="purchases-module" class="module-content"> <!--d-none-->
+ <div id="purchases-module" class="module-content">
     <div class="row g-4">
+        <!-- Purchase Entry Form -->
         <div class="col-md-4">
             <div class="table-container border-top border-4 border-primary shadow-sm">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="mb-4">
                     <h5 class="fw-bold m-0 text-primary">
-                        <i class="bi bi-plus-circle me-2"></i>New Purchase
+                        <i class="bi bi-plus-circle me-2"></i>New Purchase Entry
                     </h5>
                 </div>
                 
                 <form id="purchaseEntryForm">
+                    <!-- 1. Dynamic Supplier Dropdown -->
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">Supplier Name</label>
-                        <select class="form-select border-2">
-                            <option selected disabled>Select a supplier...</option>
-                            <option>HealthCorp Pharma</option>
-                            <option>Global Med Distributors</option>
-                            <option>Sunrise Laboratories</option>
+                        <label class="form-label small fw-bold text-muted">Supplier Source</label>
+                        <select class="form-select border-2" id="supplier_id" required>
+                            <option selected disabled value="">Select a supplier...</option>
+                            {% for supplier in supplier_details %}
+                                <option value="{{ supplier.id }}">{{ supplier.supplier_name }}</option>
+                            {% endfor %}
                         </select>
                     </div>
 
+                    <!-- 2. Dynamic Medicine Dropdown[cite: 2] -->
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">Medicine Name</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-2 border-end-0"><i class="bi bi-search"></i></span>
-                            <input type="text" class="form-control border-2 border-start-0" placeholder="Search medicine...">
+                        <label class="form-label small fw-bold text-muted">Medicine to Restock</label>
+                        <select class="form-select border-2" id="medicine_id" required>
+                            <option selected disabled value="">Choose medicine...</option>
+                            {% for med in medicine_details %}
+                                <option value="{{ med.id }}">{{ med.medicine_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- 3. Pharmacy Specific Fields[cite: 2] -->
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label small fw-bold text-muted">Batch Number</label>
+                            <input type="text" id="batch_no" class="form-control border-2" placeholder="B-2026" required>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label small fw-bold text-muted">Expiry Date</label>
+                            <input type="date" id="expiry_date" class="form-control border-2" required>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-6 mb-3">
                             <label class="form-label small fw-bold text-muted">Quantity</label>
-                            <input type="number" class="form-control border-2" placeholder="0">
+                            <input type="number" id="quantity" class="form-control border-2" placeholder="0" min="1" required>
                         </div>
                         <div class="col-6 mb-3">
-                            <label class="form-label small fw-bold text-muted">Cost Price ($)</label>
-                            <input type="number" class="form-control border-2" placeholder="0.00" step="0.01">
+                            <label class="form-label small fw-bold text-muted">Cost Price (&#8377;)</label>
+                            <input type="number" id="cost_price" class="form-control border-2" placeholder="0.00" step="0.01" required>
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label small fw-bold text-muted">Purchase Date</label>
-                        <input type="date" class="form-control border-2" value="2026-04-12">
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">
+                    <button type="button" onclick="save_purchase()" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">
                         <i class="bi bi-box-arrow-in-down me-2"></i> UPDATE STOCK
                     </button>
                 </form>
             </div>
-
-            <div class="card mt-3 border-0 bg-light-subtle shadow-sm">
-                <div class="card-body py-3">
-                    <div class="d-flex align-items-center text-info">
-                        <i class="bi bi-info-circle-fill me-2 h5 mb-0"></i>
-                        <span class="small fw-semibold">Inventory Tip</span>
-                    </div>
-                    <p class="small text-muted mt-2 mb-0">
-                        Recording a purchase will automatically increment the medicine's available quantity and update the "Last Purchase Price" in your records.
-                    </p>
-                </div>
-            </div>
         </div>
 
+        <!-- Purchase History Table -->
         <div class="col-md-8">
             <div class="table-container shadow-sm h-100">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="fw-bold m-0"><i class="bi bi-clock-history me-2"></i>Recent Stock Invoices</h5>
-                    <div class="input-group w-auto">
-                        <input type="text" class="form-control form-control-sm" placeholder="Search history...">
-                        <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-funnel"></i></button>
-                    </div>
                 </div>
 
                 <div class="table-responsive">
@@ -80,42 +77,28 @@
                         <thead class="table-light">
                             <tr class="small text-muted text-uppercase">
                                 <th>Date</th>
-                                <th>Invoice #</th>
                                 <th>Supplier</th>
                                 <th>Medicine</th>
+                                <th>Batch</th>
                                 <th>Qty</th>
                                 <th>Total</th>
-                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
+                            {% for purchase in purchase_history %}
                             <tr>
-                                <td class="small">12 Apr 2026</td>
-                                <td class="fw-semibold">#PUR-8821</td>
-                                <td>HealthCorp</td>
-                                <td><strong>Amoxicillin</strong></td>
-                                <td>500</td>
-                                <td class="fw-bold">$2,500</td>
-                                <td><span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle">Success</span></td>
+                                <td class="small">{{ purchase.purchase_date|date:"d M Y" }}</td>
+                                <td>{{ purchase.supplier.supplier_name }}</td>
+                                <td><strong>{{ purchase.medicine.medicine_name }}</strong></td>
+                                <td class="small text-muted">{{ purchase.batch_number }}</td>
+                                <td>{{ purchase.quantity_received }}</td>
+                                <td class="fw-bold">&#8377;{{ purchase.total_cost }}</td>
                             </tr>
+                            {% empty %}
                             <tr>
-                                <td class="small">10 Apr 2026</td>
-                                <td class="fw-semibold">#PUR-8819</td>
-                                <td>Global Med</td>
-                                <td><strong>Paracetamol</strong></td>
-                                <td>120</td>
-                                <td class="fw-bold">$360</td>
-                                <td><span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle">Success</span></td>
+                                <td colspan="6" class="text-center text-muted py-4">No purchase records found.</td>
                             </tr>
-                            <tr>
-                                <td class="small">08 Apr 2026</td>
-                                <td class="fw-semibold">#PUR-8790</td>
-                                <td>Sunrise Lab</td>
-                                <td><strong>Vitamin C</strong></td>
-                                <td>200</td>
-                                <td class="fw-bold">$1,100</td>
-                                <td><span class="badge rounded-pill bg-warning-subtle text-warning border border-warning-subtle">Pending</span></td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -123,4 +106,41 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block script %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+    integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    function save_purchase() {
+        const data = {
+            "supplier_id": $('#supplier_id').val(),
+            "medicine_id": $('#medicine_id').val(),
+            "batch_no": $('#batch_no').val(),
+            "expiry_date": $('#expiry_date').val(),
+            "quantity": $('#quantity').val(),
+            "cost_price": $('#cost_price').val(),
+            "csrfmiddlewaretoken": "{{ csrf_token }}"
+        };
+
+        if (!data.supplier_id || !data.medicine_id || !data.quantity) {
+            alert("Please fill all required fields.");
+            return;
+        }
+
+        $.ajax({
+            method: "POST",
+            url: "/add-purchase/",
+            data: data,
+            success: function(response) {
+                alert("Stock Updated Successfully!");
+                location.reload();
+            },
+            error: function(xhr) {
+                alert("Error updating stock: " + xhr.responseText);
+            }
+        });
+    }
+</script>
 {% endblock %}

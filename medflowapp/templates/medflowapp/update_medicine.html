@@ -47,16 +47,7 @@
                     </div>
 
                     <!-- Stock Status -->
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Status</label>
-                            <select class="form-select" value="{{medicine_ID.stock_status}}" id="stock_status">
-                                <option value="">------</option>
-                                <option value="Out of Stock">Out-of-Stock</option>
-                                <option value="In Stock">In-stock</option>
-                            </select>
-                        </div>
-                    </div>
+                    
 
             </div>
 
@@ -81,7 +72,6 @@
         var med_ID=$("#med_ID").val()
         var expiry_date = $('#expiry_date').val()
         var quantity = $('#quantity').val()
-        var stock_status = $('#stock_status').val()
         var price = $('#price').val()
 
         $.ajax({
@@ -91,8 +81,8 @@
                 "med_ID": med_ID,
                 "expiry_date": expiry_date,
                 "quantity": quantity,
-                "stock_status": stock_status,
-                "price": price
+                "price": price,
+                "csrfmiddlewaretoken": "{{ csrf_token }}"
             },
             success: function () {
                 alert("Medicine updated successfully")

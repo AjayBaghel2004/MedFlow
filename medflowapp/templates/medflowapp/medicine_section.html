@@ -30,10 +30,9 @@
                         <td>{{ medicine.expiry_date }}</td>
                         <td>{{ medicine.quantity }}</td>
                         <td>&#8377;{{ medicine.price }}</td>
-                        <td>{{ medicine.stock_status }}</td>
+                        <td>{{ medicine.is_stock_available }}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-                                data-bs-target="#updateMedicineModal">
+                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal">
                                  <a href="/updation_page/{{medicine.id}}"><i class="bi bi-pencil"></i></a>
                             </button>
                             <button class="btn btn-sm btn-outline-danger"
@@ -86,16 +85,6 @@
                             <input type="number" id="quantity" class="form-control">
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Status</label>
-                            <select class="form-select" id="stock_status">
-                                <option value="-------">------</option>
-                                <option value="Out-of-Stock">Out-of-Stock</option>
-                                <option value="In-Stock">In-Stock</option>
-                            </select>
-                        </div>
-                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -108,9 +97,7 @@
 
 
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
-    integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
-    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
 <!-- <script>
 </script> -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -133,9 +120,9 @@
                 "medicine_name": medicine_name,
                 "category": category,
                 "expiry_date": expiry_date,
-                "stock_status": stock_status,
                 "price": price,
-                "quantity": quantity
+                "quantity": quantity,
+                "csrfmiddlewaretoken": "{{ csrf_token }}"
             },
             success: function () {
                 // alert("New Medicine Entered.")
@@ -164,7 +151,8 @@
                     method: "POST",
                     url: '/delete-medicine/',
                     data: {
-                        "medicine_ID": medicine_ID
+                        "medicine_ID": medicine_ID,
+                        "csrfmiddlewaretoken": "{{ csrf_token }}"
                     },
                     success: function (response) {
                         // alert("Medicine Deleted")

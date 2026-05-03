@@ -66,9 +66,6 @@ def pos_billing(request):
 def inventory(request):
     return render(request, 'medflowapp/inventory.html')
 
-def purchases(request):
-    return render(request, 'medflowapp/purchases_section.html')
-
 def reports_section(request):
     return render(request, 'medflowapp/report_section.html')
 
@@ -108,7 +105,7 @@ def login_user(request):
         else:
             return JsonResponse({"status":403, "message": "Invalid Credentials"})
 
-@csrf_exempt
+@login_required
 def add_medicine(request):
     data = request.POST.dict()
     print(data)
@@ -127,7 +124,7 @@ def update_medicine_page(request, medicineid):
     print(f"Medicine ID : {medicine_ID}")
     return render(request, 'medflowapp/update_medicine.html', {"medicine_ID":medicine_ID})
     
-@csrf_exempt
+@login_required
 def update_med_info(request):
     try:
         data=request.POST.dict()
@@ -136,21 +133,90 @@ def update_med_info(request):
         medicine.price = data['price']
         medicine.quantity=data['quantity']
         medicine.expiry_date=data['expiry_date']
-        medicine.stock_status=data['stock_status']
         medicine.save()
         return JsonResponse({"status":200})
     except:
         import traceback
         traceback.print_exc()
 
-@csrf_exempt
+
+@login_required
+def supplier_list(request):
+    suppliers=Supplier.objects.all()
+    return render(request, 'medflowapp/suppliers_section.html', {'suppliers':suppliers})
+
+@login_required
+def add_supplier(request):
+    if request.method == "POST":
+        try:
+            data=request.POST
+            Supplier.objects.create(
+                supplier_name=data.get('supplier_name'),
+                supplier_contact=data.get('phone_number'),
+                supplier_person=data.get('contact_person'),
+                supplier_address=data.get('address')
+            )
+            return JsonResponse({"status":200, "message":"Supplier added successfully!"})
+        except Exception as e:
+            return JsonResponse({"status":500, "message":str(e)}, status=500)
+
+@login_required
+def delete_supplier(request):
+    id=request.POST.dict()
+    supplier = Supplier.objects.get(id=id['supplier_ID'])
+    supplier.delete()
+    return JsonResponse({"status":200, "message": "Supplier Deleted Successfully!"})
+
+@login_required
+def purchases(request):
+    suppliers = Supplier.objects.all()
+    medicines = Medicine.objects.all()
+
+    history = Purchase.objects.all().order_by('-purchase_date')
+
+    context = {
+        "supplier_details":suppliers,
+        "medicine_details": medicines,
+        "purchase_history":history,
+    }
+    return render(request, "medflowapp/purchases_section.html", context)
+
+@transaction.atomic
+def add_purchases(request):
+    if request.method=="POST":
+        try:
+            data=request.POST
+            qty=int(data.get('quantity'))
+            med_id=data.get('medicine_id')
+            #create the purchase Record
+            purchase = Purchase.objects.create(
+                supplier_id=data.get('supplier_id'),
+                medicine_id=med_id,
+                batch_number=data.get('batch_no'),
+                quantity_received=qty,
+                cost_price=data.get('cost_price'),
+                purchase_date=data.get('expiry_date'),
+            )
+            #Update medicine inventory
+            medicine = Medicine.objects.get(id=med_id)
+            medicine.quantity += qty
+            #Sync the expiry date with the latest batch
+            medicine.expiry_date = data.get('expiry_date')
+            medicine.save()
+
+            return JsonResponse({"status":200, "message":"Stock updates Successfully!"})
+        except Exception as e:
+            return JsonResponse({"status":200, "message":str(e)}, status=500)
+
+
+
 def add_customer(request):
     data=request.POST.dict()
     print(f"Customer Data : {data}")
     Customer.objects.create(customer_name=data['customer_name'], customer_phone=data['phone_number'])
     return JsonResponse({"status":200})
 
-@csrf_exempt
+
 def remove_customer(request):
     data=request.POST.dict()
     customer_ID = Customer.objects.get(id=data['customer_ID'])

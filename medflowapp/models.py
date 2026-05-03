@@ -59,6 +59,9 @@ class Purchase(models.Model):
     cost_price=models.DecimalField(max_digits=11, decimal_places=2)
     purchase_date=models.DateTimeField(default=timezone.now)
 
+    def total_cost(self):
+        return self.quantity_received * self.cost_price
+
 class Sale(models.Model):
     invoice_number=models.IntegerField()
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT)

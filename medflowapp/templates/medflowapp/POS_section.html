@@ -225,7 +225,8 @@
             url: "/add-customer/",
             data: {
                 "customer_name": customer_name,
-                "phone_number": customer_phone
+                "phone_number": customer_phone,
+                "csrfmiddlewaretoken": "{{ csrf_token }}"
             },
             success: function () {
                 alert('New Customer added.')
@@ -251,7 +252,8 @@
                 method: "POST",
                 url: "/remove-customer/",
                 data: {
-                    "customer_ID": customer_ID
+                    "customer_ID": customer_ID,
+                    "csrfmiddlewaretoken": "{{ csrf_token }}"
                 },
                 success: function () {
                     //alert("Customer Removed.")
