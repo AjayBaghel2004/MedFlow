@@ -5,7 +5,9 @@ from django.http import request, JsonResponse
 from django.db import transaction
 from django.db.models import Sum
 from django.views.decorators.csrf import csrf_exempt
-from .models import Employee, Medicine, Customer
+from .models import *
+from django.utils import timezone
+from datetime import timedelta
 import traceback
 # Create your views here.
 def register(request):
@@ -101,7 +103,7 @@ def login_user(request):
         user = authenticate(request, username=email, password=password)
         if user is not None:
             #This Creates the session and logs the user in properly
-            auth_login(request user)
+            auth_login(request, user)
             return JsonResponse({"status": 200})
         else:
             return JsonResponse({"status":403, "message": "Invalid Credentials"})

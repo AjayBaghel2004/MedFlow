@@ -19,7 +19,7 @@
         <div class="col-md-3">
             <div class="card stat-card p-3 border-primary">
                 <small class="text-muted">Today's Sales</small>
-                <h3 class="fw-bold text-primary">{{ today_sales }}</h3>
+                <h3 class="fw-bold text-primary">&#8377; {{ today_sales }}</h3>
             </div>
         </div>
         <div class="col-md-3">
@@ -57,34 +57,41 @@
         </div>
     </div>
 </div>
+{% endblock %}
 {% block script %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const ctx = document.getElementById('salesChart').getContext('2d');
-    new Chart(ctx, {
-        type:'line',
-        data:{
-            labels: {{ chart_labels|safe }},
-            datasets:[{
-                label:'Daily Revenue(₹)',
-                data:{{ chart_data|safe }},
-                borderColor: '#2ecc71',
-                backgroundColor: 'rgba(46,204, 113, 0.1)',
-                fill: true,
-                tension:0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins:{ legend: {display:false } },
-            scales:{
-                y:{
-                    beginAtZero:true,
-                    ticks: { callback: value => '₹' + value }
+    const chartElement = document.getElementById('salesChart');
+    if (chartElement) {
+        const ctx = chartElement.getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_labels|safe }}, // From your views.py
+                datasets: [{
+                    label: 'Daily Revenue (₹)',
+                    data: {{ chart_data|safe }},
+                    borderColor: '#2ecc71',
+                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { 
+                    legend: { display: false } 
+                }, // Added the missing comma here
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { 
+                            callback: function(value) { return '₹' + value; } 
+                        }
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 </script>
-{% endblock %}
 {% endblock %}
