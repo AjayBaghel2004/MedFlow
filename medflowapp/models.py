@@ -63,9 +63,8 @@ class Purchase(models.Model):
         return self.quantity_received * self.cost_price
 
 class Sale(models.Model):
-    invoice_number=models.IntegerField()
-    customer = models.ForeignKey(Customer, on_delete=models.PROTECT)
-    employee = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True)
+    invoice_number=models.CharField()
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
     subtotal=models.DecimalField(max_digits=11, decimal_places=2, default=0.00)
     gst_amount = models.DecimalField(max_digits=5,decimal_places=2, default=12.00)
     total_amount=models.DecimalField(max_digits=11, decimal_places=2, editable=False)

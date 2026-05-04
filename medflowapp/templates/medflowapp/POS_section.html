@@ -1,6 +1,36 @@
 {% extends 'layout/base.html' %}
 
 {% block content %}
+<style>
+    @media print {
+        /* 1. Hide every UI element except the bill container */
+        body * {
+            visibility: hidden;
+        }
+        #pos-module .col-md-5, #pos-module .col-md-5 * {
+            visibility: visible;
+        }
+        
+        /* 2. Position the bill at the top-left of the printed page */
+        #pos-module .col-md-5 {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+
+        /* 3. Hide buttons (Clear/Print) on the actual paper */
+        .btn, .modal, .sidebar, .navbar, .input-group, .table-container:not(.sticky-top) {
+            display: none !important;
+        }
+
+        /* 4. Remove shadows and borders for a clean look */
+        .table-container {
+            box-shadow: none !important;
+            border: none !important;
+        }
+    }
+</style>
 <div id="pos-module" class="module-content"> <!--d-none-->
     <div class="row g-3">
         <div class="col-md-7">
@@ -61,13 +91,13 @@
 
                                 <div class="ms-auto">
                                     <button type="button" class="btn btn-sm text-danger p-0" title="Remove Customer"
-                                        onclick="remove_customer('{{customer.id}}')" >
+                                        onclick="remove_customer('{{customer.id}}')">
                                         <i class="bi bi-x-circle-fill"></i>
                                     </button>
                                     <button class="btn btn-sm  px-3 py-1 fw-bold"
-                                    onclick="selectCustomer('{{customer.customer_name}}', '#CUS-{{customer.id}}', '+91 {{customer.customer_phone}}')">
-                                     <i class="fa-solid fa-circle-check"></i>
-                                </button>
+                                        onclick="selectCustomer('{{customer.customer_name}}', '#CUS-{{customer.id}}', '+91 {{customer.customer_phone}}')">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    </button>
                                 </div>
                             </div>
                             {% endfor %}
@@ -99,9 +129,12 @@
                                     <strong id="medicine_name">{{md.medicine_name}}</strong><br>
                                     <small class="text-muted">{{md.expiry_date}}</small>
                                 </td>
-                                <td><span class="badge bg-success-subtle text-success" id="quantity">{{md.quantity}} Left</span></td>
+                                <td><span class="badge bg-success-subtle text-success" id="quantity">{{md.quantity}}
+                                        Left</span></td>
                                 <td id="price">&#8377;{{md.price}}</td>
-                                <td><button class="btn btn-sm btn-success" onclick="selectMedicine('{{md.medicine_name}}','{{md.price}}' )">Add</button></td>
+                                <td><button class="btn btn-sm btn-success"
+                                        onclick="selectMedicine('{{md.id}}','{{md.medicine_name}}','{{md.price}}','{{md.quantity}}' )">Add</button>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -112,9 +145,15 @@
 
         <div class="col-md-5">
             <div class="table-container sticky-top" style="top: 20px;">
+                <div class="d-none d-print-block text-center mb-4">
+                    <h4 class="fw-bold">MEDFLOW PHARMACY</h4>
+                    <p class="small">123 Health Street, Nagpur<br>GSTIN: 27AAAAA0000A1Z5</p>
+                    <hr>
+                </div>
+
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <h5 class="fw-bold m-0 text-success">Current Bill</h5>
-                    <span class="text-muted small">Inv: #INV-00892</span>
+                    <h5 class="fw-bold m-0 text-success">Tax Invoice</h5>
+                    <span class="text-muted small">Inv: #{{ invoice_no }}</span> <!-- We can pass this via JS -->
                 </div>
 
                 <div id="activeCustomerInBill"
@@ -138,7 +177,7 @@
                 <div class="pos-cart border-bottom mb-3">
                 </div>
                 <div class="pos-cart border-bottom mb-3">
-                    <table  class="table table-sm align-middle">
+                    <table class="table table-sm align-middle">
                         <thead>
                             <tr class="small text-uppercase text-muted">
                                 <th>Item</th>
@@ -150,7 +189,8 @@
                         <tbody id="medicines_list">
                             <tr>
                                 <td id="medicine_name"></td>
-                                <td><input type="number" id="quantity" class="form-control form-control-sm" value="0"></td>
+                                <td><input type="number" id="quantity" class="form-control form-control-sm" value="0">
+                                </td>
                                 <td id="price" class="text-end fw-semibold">&#8377; </td>
                                 <td class="text-end"><i class="bi bi-x-circle text-danger cursor-pointer"></i></td>
                             </tr>
@@ -160,21 +200,21 @@
 
                 <div class="bg-light p-3 rounded-3 mb-3">
                     <div class="d-flex justify-content-between mb-2 small">
-                        <span>Subtotal:</span> <span class="fw-bold" id = "subtotal_val">&#8377; 10.00</span>
+                        <span>Subtotal:</span> <span class="fw-bold" id="subtotal_val">&#8377;0.0</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2 small">
-                        <span>GST (12%):</span> <span class="fw-bold" id="gst_val">&#8377; 1.20</span>
+                        <span>GST (12%):</span> <span class="fw-bold" id="gst_val">&#8377; 0</span>
                     </div>
                     <hr>
                     <div class="d-flex justify-content-between text-success">
                         <span class="fw-bold h5">Total Payable:</span>
-                        <span class="fw-bold h4" id="total_val">&#8377; 11.20</span>
+                        <span class="fw-bold h4" id="total_val">&#8377; 0.0</span>
                     </div>
                 </div>
 
                 <div class="row g-2">
                     <div class="col-6">
-                        <button class="btn btn-outline-secondary w-100 py-2"><i class="bi bi-x-lg"></i> Clear</button>
+                        <button class="btn btn-outline-secondary w-100 py-2" onclick="location.reload()"><i class="bi bi-x-lg"></i> Clear</button>
                     </div>
                     <div class="col-6">
                         <button class="btn btn-primary w-100 py-2 fw-bold mb-2" onclick="processSale()">
@@ -271,10 +311,13 @@
         });
 
     }
+
+    let selectedCustomerRawID = null;
     function selectCustomer(name, id, phone) {
         // 1. Fill the details in the Bill Section
+        selectedCustomerRawID = id.replace('#CUS-', '');
         document.getElementById('billCustomerName').innerText = name;
-        document.getElementById('billCustomerID').innerText = '(' + id + ')';
+        document.getElementById('billCustomerID').innerText = '(' + selectedCustomerRawID + ')';
 
         // 2. Toggle Visibility
         document.getElementById('activeCustomerInBill').classList.remove('d-none');
@@ -289,29 +332,38 @@
         document.getElementById('guestLabel').classList.remove('d-none');
     }
 
-    let cart=[];
-    function selectMedicine(name, price){
-        //1. Check if medicine already  in cart 
-        const exisitingItem = cart.find(item=> item.name===name)
+    let cart = [];
+    function selectMedicine(id, name, price, stock) {
+        const existingItem = cart.find(item => item.name === name);
+        const availableStock = parseInt(stock);
 
-        if(exisitingItem){
-            exisitingItem += 1;
-            exisitingItem.total = existingItem.qty * parseFloat(existingItem.price)
+        if (existingItem) {
+            if (existingItem.qty + 1 > availableStock) {
+                Swal.fire('Stock Error', 'Only ' + availableStock + ' units available.', 'warning');
+                return;
+            }
+            existingItem.qty += 1;
+            existingItem.total = existingItem.qty * parseFloat(existingItem.price);
         } else {
-            //2. Add new Item
+            if (availableStock < 1) {
+                Swal.fire('Out of Stock', 'This medicine is currently unavailable.', 'error');
+                return;
+            }
             cart.push({
-                name:name,
-                price:parseFloat(price),
-                qty:1,
-                total:parseFloat(price)
+                id: id,
+                name: name,
+                price: parseFloat(price),
+                qty: 1,
+                total: parseFloat(price)
             });
         }
         renderCart();
     }
-    function renderCart(){
+    function renderCart() {
         const list = document.getElementById('medicines_list');
-        list.innerHTML='';
+        list.innerHTML = '';
         cart.forEach((item, index) => {
+            console.log(item, "--------------------------")
             const row = `
                  <tr>
                     <td><strong>${item.name}</strong><td>
@@ -326,19 +378,19 @@
         })
         updateSummary();
     }
-    function updateQty(index, newQty){
-        if (newQty<1) return;
+    function updateQty(index, newQty) {
+        if (newQty < 1) return;
         cart[index].qty = parseInt(newQty);
         cart[index].total = cart[index].qty * cart[index].price;
         updateSummary();
         renderCart();
     }
-    function removeItem(index){
+    function removeItem(index) {
         cart.splice(index, 1);
         renderCart();
     }
-    function updateSummary(){
-        let subtotal = cart.reduce((sum,  item) => sum + item.total, 0);
+    function updateSummary() {
+        let subtotal = cart.reduce((sum, item) => sum + item.total, 0);
         let gst = subtotal * 0.12
         let total = subtotal + gst;
 
@@ -348,34 +400,35 @@
         document.getElementById('total_val').innerText = '₹' + total.toFixed(2);
     }
 
-    function processSale(){
-        if (cart.length===0){
+    function processSale() {
+        if (cart.length === 0) {
             Swal.fire('Error', "Cart is empty!", 'Error');
-            return; 
+            return;
         }
 
         const saleData = {
             customer_name: document.getElementById('billCustomerName').innerText,
-            customer_ID: document.getElementById('billCustomerID').innerText,
+            customer_ID: selectedCustomerRawID,
             items: cart,
-            subtotal:document.getElementById('subtotal_val').innerText.replace('₹', ''),
-            gst:document.getElementById('gst_val').innerText.replace('₹', ''),
+            subtotal: document.getElementById('subtotal_val').innerText.replace('₹', ''),
+            gst: document.getElementById('gst_val').innerText.replace('₹', ''),
             total: document.getElementById('total_val').innerText.replace('₹', '')
         };
 
         $.ajax({
-            method:"POST",
-            url:"/complete-sale/",
-            data:JSON.stringify(saleData),
-            contentType:'application/json',
-            headers:{ "X-CSRFToken": "{{ csrf_token }}" },
-            success: function(response){
-                Swal.fire("sucess", "sale recorded ! Invoice: " + response.invoice, "success").then(() => {
+            method: "POST",
+            url: "/complete-sale/",
+            data: JSON.stringify(saleData),
+            contentType: 'application/json',
+            headers: { "X-CSRFToken": "{{ csrf_token }}" },
+            success: function (response) {
+                document.querySelector('.text-muted.small').innerText = "Inv: #INV-" + response.invoice;
+                Swal.fire("sucess", "sale recorded ! Invoice: " , "success").then(() => {
                     window.print();
                     location.reload();
                 });
             },
-            error: function(err){
+            error: function (err) {
                 Swal.fire("Error", "Transaction Failed", "error");
             }
         });

@@ -6,6 +6,8 @@ from django.db import transaction
 from django.db.models import Sum
 from django.views.decorators.csrf import csrf_exempt
 from .models import *
+import json
+import uuid
 from django.utils import timezone
 from datetime import timedelta
 import traceback
@@ -21,7 +23,7 @@ def dashboard(request):
     total_medicines = Medicine.objects.count() #Total Medicines in inventory
     low_stock_count = Medicine.objects.filter(quantity__lt=10).count()
     today = timezone.now().date() # today sales revenue
-    today_sales = Sale.objects.filter(created_at__date = today).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    today_sales = float(Sale.objects.filter(created_at__date = today).aggregate(Sum('total_amount'))['total_amount__sum'] or 0)
     next_month = today + timezone.timedelta(days=30)
     #expiring Soon  in the nxt 30 days
     expiring_soon = Medicine.objects.filter(expiry_date__range = [today, next_month]).count()
@@ -112,13 +114,13 @@ def add_medicine(request):
     Medicine.objects.create(medicine_name = data['medicine_name'], expiry_date=data['expiry_date'], med_category=data['category'], price=data['price'], quantity=data['quantity'])
     return JsonResponse({'status': 200})
 
-@csrf_exempt
+@login_required
 def delete_medicine(request):
     data=request.POST.dict()
     med_ID = Medicine.objects.get(id=data['medicine_ID'])
     med_ID.delete()
     return JsonResponse({"status": 200})
-
+@login_required
 def update_medicine_page(request, medicineid):
     medicine_ID = Medicine.objects.get(id=medicineid)
     print(f"Medicine ID : {medicine_ID}")
@@ -229,27 +231,28 @@ def complete_sale_view(request):
         data = json.loads(request.body)
         #1.Get or set Customer
         cus_ID = data.get('customer_id')
-        customer = Customer.objects.filter9(id=cus_ID).first() if cus_ID else None
-
+        customer = Customer.objects.filter(id=cus_ID).first() if cus_ID else None
+        # generate automatic invoice number
+        new_invoice_number = f"INV-{uuid.uuid4().hex[:6].upper()}"
         #2. create Sale
         sale = Sale.objects.create(
+            invoice_number = new_invoice_number,
             customer=customer,
-            user=request.user,
-            subtotal=data['subtotal'],
-            gst_amount=data['gst'],
-            total_amount=data['total']
+            subtotal=float(data['subtotal']),
+            gst_amount=float(data['gst']),
+            total_amount=float(data['total'])
         )
         #3. Create sale Items and Reduce Stock
         for item in data['items']:
-            medicine=Medicine.objects.get(medicine_name=item['name'])
+            medicine=Medicine.objects.get(id=item['id'])
             #Stock check
             if medicine.quantity < item['qty']:
                 transaction.set_rollback(True)
                 return JsonResponse({"status": "error", "message":f"Low stock for {medicine.medicine_name}"},status=400)
             
             SaleItem.objects.create(
-                medicine_ID=medicine,
-                sale_ID=sale,
+                medicine=medicine,
+                sale=sale,
                 quantity_sold=item['qty'],
                 unit_price=item['price'],
                 total_price=item['total']

@@ -22,7 +22,7 @@ class PurchasesAdmin(admin.ModelAdmin):
 admin.site.register(Purchase, PurchasesAdmin)
 
 class SalesAdmin(admin.ModelAdmin):
-    list_display=('id', 'invoice_number', 'customer', 'employee', 'subtotal', 'gst_amount', 'total_amount', 'created_at')
+    list_display=('id', 'invoice_number', 'customer', 'subtotal', 'gst_amount', 'total_amount', 'created_at')
 admin.site.register(Sale, SalesAdmin)
 
 class SalesItemsAdmin(admin.ModelAdmin):

@@ -17,6 +17,7 @@ urlpatterns = [
     path('delete-supplier/', views.delete_supplier),
     path('add-purchase/', views.add_purchases, name='add-purchase'),
     path('point-of-sale/', views.pos_billing, name='Point-of-Sale'),
+    path('complete-sale/', views.complete_sale_view, name='complete-sale'),
     path('remove-customer/',views.remove_customer, name='remove-customer'),
     path('add-customer/', views.add_customer, name='add-customer'),
     path('inventory/', views.inventory, name='inventory'),
