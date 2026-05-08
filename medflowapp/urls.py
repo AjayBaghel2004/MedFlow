@@ -23,4 +23,6 @@ urlpatterns = [
     path('inventory/', views.inventory, name='inventory'),
     path('purchases/', views.purchases, name='purchases'), 
     path('reports/', views.reports_section, name='reports'),
+    path('export-excel/', views.export_sales_excel, name='export-excel'),
+    path('export-pdf/', views.export_sales_pdf, name='export-pdf'),
 ]

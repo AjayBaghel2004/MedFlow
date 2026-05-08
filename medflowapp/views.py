@@ -3,14 +3,25 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login as auth_login
 from django.http import request, JsonResponse
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Sum, F
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import logout
+from django.shortcuts import redirect
+from django.views.decorators.cache import never_cache
 from .models import *
+import openpyxl
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
 import json
 import uuid
 from django.utils import timezone
 from datetime import timedelta
 import traceback
+from django.views.decorators.cache import cache_control
+from django.core.mail import send_mail
+from django.conf import settings
+
 # Create your views here.
 def register(request):
     return render(request, 'medflowapp/register.html')
@@ -19,6 +30,7 @@ def login(request):
     return render(request, 'medflowapp/login.html')
 
 @login_required(login_url='/login/')
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def dashboard(request):
     total_medicines = Medicine.objects.count() #Total Medicines in inventory
     low_stock_count = Medicine.objects.filter(quantity__lt=10).count()
@@ -68,9 +80,6 @@ def pos_billing(request):
 def inventory(request):
     return render(request, 'medflowapp/inventory.html')
 
-def reports_section(request):
-    return render(request, 'medflowapp/report_section.html')
-
 def register_user(request):
     if request.method == "POST":
         try:
@@ -92,7 +101,6 @@ def register_user(request):
         except Exception as e:
             return JsonResponse({"status": 500, "message":str(e)})
 
-@csrf_exempt
 def login_user(request):
     if request.method=="POST":
         email = request.POST.get('email')
@@ -108,6 +116,7 @@ def login_user(request):
             return JsonResponse({"status":403, "message": "Invalid Credentials"})
 
 @login_required
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def add_medicine(request):
     data = request.POST.dict()
     print(data)
@@ -115,18 +124,22 @@ def add_medicine(request):
     return JsonResponse({'status': 200})
 
 @login_required
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def delete_medicine(request):
     data=request.POST.dict()
     med_ID = Medicine.objects.get(id=data['medicine_ID'])
     med_ID.delete()
     return JsonResponse({"status": 200})
+
 @login_required
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def update_medicine_page(request, medicineid):
     medicine_ID = Medicine.objects.get(id=medicineid)
     print(f"Medicine ID : {medicine_ID}")
     return render(request, 'medflowapp/update_medicine.html', {"medicine_ID":medicine_ID})
     
 @login_required
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def update_med_info(request):
     try:
         data=request.POST.dict()
@@ -143,11 +156,13 @@ def update_med_info(request):
 
 
 @login_required
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def supplier_list(request):
     suppliers=Supplier.objects.all()
     return render(request, 'medflowapp/suppliers_section.html', {'suppliers':suppliers})
 
 @login_required
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def add_supplier(request):
     if request.method == "POST":
         try:
@@ -163,6 +178,7 @@ def add_supplier(request):
             return JsonResponse({"status":500, "message":str(e)}, status=500)
 
 @login_required
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def delete_supplier(request):
     id=request.POST.dict()
     supplier = Supplier.objects.get(id=id['supplier_ID'])
@@ -170,6 +186,7 @@ def delete_supplier(request):
     return JsonResponse({"status":200, "message": "Supplier Deleted Successfully!"})
 
 @login_required
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def purchases(request):
     suppliers = Supplier.objects.all()
     medicines = Medicine.objects.all()
@@ -261,3 +278,94 @@ def complete_sale_view(request):
             medicine.quantity -= int(item['qty'])
             medicine.save()
         return JsonResponse({"status":"success", "invoice": sale.id})
+
+@login_required
+def reports_section(request):
+    #Handle Date  Filtering 
+    start_date=request.GET.get('start_date')
+    end_date=request.GET.get('end_date')
+
+    sales_query=Sale.objects.all() # all sales entries
+    if start_date and end_date:
+        #Filter sales between the Selected dates
+        sales_query = sales_query.filter(created_at__date_range = [start_date, end_date])
+    gross_revenue=sales_query.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    #Top selling Items: We aggregate qunatity_sold and group by the medicine name
+    top_items=SaleItem.objects.filter(sale__in=sales_query).values('medicine__medicine_name').annotate(total_units=Sum('quantity_sold')).order_by('-total_units')[:3]
+    # net Profit Calculation
+    total_cost= SaleItem.objects.filter(sale__in = sales_query).aggregate(cogs=Sum(F('quantity_sold') * F(medicine__purchase__cost_price)))['cogs'] or 0 
+    net_profit=float(gross_revenue)-float(total_cost)
+    margin=(net_profit/float(gross_revenue)*100) if gross_revenue > 0 else 0
+
+    context={
+        "gross_revenue":gross_revenue,
+        "net_profit":net_profit,
+        "margin": margin,
+        "top_items":top_items,
+        "start_date":start_date,
+        "end_date": end_date,
+    }
+    return render(request, "medflowapp/report_section.html", context)
+
+def export_sales_excel(request):
+    response=HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    reponse['Content-Disposition']='attachment; filename="Sales_Report.xlsx"'
+    wb=openpyxl.Workbook()
+    ws=wb.active
+    ws.title="Sales Report"
+    #define headers
+    headers = ['Date', 'Invoice #', 'Customer', 'Subtotal', 'GST', 'Total']
+    ws.append(headers)
+    # Fetch Data
+    sales=Sale.objects.all().order_by('-created_at')
+    for sale in sales:
+        ws.append([
+            sale.created_at.strftime("%Y-%m-%d"),
+            sale.invoice_number,
+            sale.customer.customer_name if sale.customer else "Guest",
+            float(sale.subtotal),
+            float(sale.gst_amount),
+            float(sale.total_amount)
+        ])
+
+        wb.save(response)
+        return response
+
+def export_sales_pdf(request):
+    reponse=HttpResponse(content_type='application/pdf')
+    reponse['content-Disposition'] = 'attachment; filename="Sales_Report.pdf"'
+    p=canvas.Canvas(reponse, pagesize=letter)
+    p.setFont('Helvetica-Bold', 16)
+    p.drawString(100, 750,"MedFlow Pharmacy - Sales Report")
+    p.setFont("Helvetica", 12)
+    y=700
+    sales = Sale.objects.all()
+    for sale in sales:
+        line = f"Inv: {sale.invoice_number} | Date: {sale.created_at.date()} | Total: {sale.total_amount}"
+        p.drawString(100, y, line)
+        y-=20
+        if y < 50:
+            p.showPage()
+            y=750
+        p.showPage()
+        p.save()
+        return response
+@never_cache
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+
+def send_mail_page(request):
+    address = "ajaybaghel2459@gmail.com"
+    subject = "test mail"
+    message = "OTP verifiation 123456"
+
+    if address and subject and message:
+        try:
+            result = send_mail(subject, message, settings.EMAIL_HOST_USER, [address])
+            print(result,'//////////////////')
+        except Exception as e:
+            traceback.print_exc()
+    else:
+        context['result'] = 'All fields are required'
