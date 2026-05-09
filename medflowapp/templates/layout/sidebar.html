@@ -10,6 +10,6 @@
             <li class="nav-item"><a href="/suppliers/" class="nav-link" onclick="showModule('Suppliers')"><i class="fa-solid fa-parachute-box"></i> Suppliers</a></li>
             <li class="nav-item"><a href="/purchases/" class="nav-link" onclick="showModule('purchases')"><i class="bi bi-truck"></i> Purchases</a></li>
             <li class="nav-item"><a href="/reports/" class="nav-link" onclick="showModule('reports')"><i class="bi bi-graph-up"></i> Reports</a></li>
-            <li class="nav-item mt-5"><a href="/login/" class="nav-link text-danger"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+            <li class="nav-item mt-5"><a href="{% url 'logout' %}" class="nav-link text-danger"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
         </ul>
 </nav>

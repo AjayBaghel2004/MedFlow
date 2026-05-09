@@ -16,6 +16,7 @@ from reportlab.lib.pagesizes import letter
 import json
 import uuid
 from django.utils import timezone
+from dateutil.relativedelta import relativedelta
 from datetime import timedelta
 import traceback
 from django.views.decorators.cache import cache_control
@@ -280,36 +281,78 @@ def complete_sale_view(request):
         return JsonResponse({"status":"success", "invoice": sale.id})
 
 @login_required
+@login_required
 def reports_section(request):
-    #Handle Date  Filtering 
-    start_date=request.GET.get('start_date')
-    end_date=request.GET.get('end_date')
-
-    sales_query=Sale.objects.all() # all sales entries
+    # 1. DATE FILTERING
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    sales_query = Sale.objects.all()
     if start_date and end_date:
-        #Filter sales between the Selected dates
-        sales_query = sales_query.filter(created_at__date_range = [start_date, end_date])
-    gross_revenue=sales_query.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-    #Top selling Items: We aggregate qunatity_sold and group by the medicine name
-    top_items=SaleItem.objects.filter(sale__in=sales_query).values('medicine__medicine_name').annotate(total_units=Sum('quantity_sold')).order_by('-total_units')[:3]
-    # net Profit Calculation
-    total_cost= SaleItem.objects.filter(sale__in = sales_query).aggregate(cogs=Sum(F('quantity_sold') * F(medicine__purchase__cost_price)))['cogs'] or 0 
-    net_profit=float(gross_revenue)-float(total_cost)
-    margin=(net_profit/float(gross_revenue)*100) if gross_revenue > 0 else 0
+        sales_query = sales_query.filter(created_at__date__range=[start_date, end_date])
 
-    context={
-        "gross_revenue":gross_revenue,
-        "net_profit":net_profit,
+    # 2. SUMMARY CARDS (Keep this clean and direct)
+    gross_revenue = sales_query.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    
+    # Calculate Total Cost for the filtered range
+    total_cost = 0
+    sale_items = SaleItem.objects.filter(sale__in=sales_query)
+    for item in sale_items:
+        # Use the logic that resolved your relation error
+        latest_purchase = Purchase.objects.filter(medicine=item.medicine).last()
+        cost = latest_purchase.cost_price if latest_purchase else 0
+        total_cost += (item.quantity_sold * float(cost))
+
+    net_profit = float(gross_revenue) - total_cost
+    margin = (net_profit / float(gross_revenue) * 100) if gross_revenue > 0 else 0
+
+    # 3. CHART DATA (The 12-month dynamic logic)
+    chart_labels = []
+    chart_sales = []
+    chart_profits = []
+    today = timezone.now().date()
+
+    for i in range(11, -1, -1):
+        month_date = today - relativedelta(months=i)
+        chart_labels.append(month_date.strftime("%b %Y"))
+
+        m_query = Sale.objects.filter(created_at__year=month_date.year, created_at__month=month_date.month)
+        
+        # Monthly Sales
+        m_sales = m_query.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+        chart_sales.append(float(m_sales))
+
+        # Monthly Profit
+        m_profit = 0
+        m_items = SaleItem.objects.filter(sale__in=m_query)
+        for mi in m_items:
+            lp = Purchase.objects.filter(medicine=mi.medicine).last()
+            c = lp.cost_price if lp else 0
+            m_profit += (mi.quantity_sold * (float(mi.unit_price) - float(c)))
+        chart_profits.append(m_profit)
+
+    # 4. TOP SELLING ITEMS
+    top_items = SaleItem.objects.filter(sale__in=sales_query).values(
+        'medicine__medicine_name'
+    ).annotate(
+        total_units=Sum('quantity_sold')
+    ).order_by('-total_units')[:3]
+
+    context = {
+        "gross_revenue": gross_revenue,
+        "net_profit": net_profit,
         "margin": margin,
-        "top_items":top_items,
-        "start_date":start_date,
+        "top_items": top_items,
+        "chart_labels": chart_labels,
+        "chart_sales": chart_sales,
+        "chart_profits": chart_profits,
+        "start_date": start_date,
         "end_date": end_date,
     }
-    return render(request, "medflowapp/report_section.html", context)
+    return render(request, 'medflowapp/report_section.html', context)
 
 def export_sales_excel(request):
     response=HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    reponse['Content-Disposition']='attachment; filename="Sales_Report.xlsx"'
+    response['Content-Disposition']='attachment; filename="Sales_Report.xlsx"'
     wb=openpyxl.Workbook()
     ws=wb.active
     ws.title="Sales Report"
@@ -332,9 +375,9 @@ def export_sales_excel(request):
         return response
 
 def export_sales_pdf(request):
-    reponse=HttpResponse(content_type='application/pdf')
-    reponse['content-Disposition'] = 'attachment; filename="Sales_Report.pdf"'
-    p=canvas.Canvas(reponse, pagesize=letter)
+    response=HttpResponse(content_type='application/pdf')
+    response['content-Disposition'] = 'attachment; filename="Sales_Report.pdf"'
+    p=canvas.Canvas(response, pagesize=letter)
     p.setFont('Helvetica-Bold', 16)
     p.drawString(100, 750,"MedFlow Pharmacy - Sales Report")
     p.setFont("Helvetica", 12)
@@ -350,22 +393,22 @@ def export_sales_pdf(request):
         p.showPage()
         p.save()
         return response
-@never_cache
-def logout_view(request):
+
+def logout_user(request):
     logout(request)
-    return redirect('login')
+    return redirect('/login/')
 
 
-def send_mail_page(request):
-    address = "ajaybaghel2459@gmail.com"
-    subject = "test mail"
-    message = "OTP verifiation 123456"
+# def send_mail_page(request):
+#     address = "ajaybaghel2459@gmail.com"
+#     subject = "test mail"
+#     message = "OTP verifiation 123456"
 
-    if address and subject and message:
-        try:
-            result = send_mail(subject, message, settings.EMAIL_HOST_USER, [address])
-            print(result,'//////////////////')
-        except Exception as e:
-            traceback.print_exc()
-    else:
-        context['result'] = 'All fields are required'
+#     if address and subject and message:
+#         try:
+#             result = send_mail(subject, message, settings.EMAIL_HOST_USER, [address])
+#             print(result,'//////////////////')
+#         except Exception as e:
+#             traceback.print_exc()
+#     else:
+#         context['result'] = 'All fields are required'

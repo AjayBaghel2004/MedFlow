@@ -42,7 +42,9 @@
         <div class="col-md-8">
             <div class="table-container shadow-sm border-0 h-100">
                 <h6 class="fw-bold mb-4">Monthly Profit vs Sales Trend</h6>
-                <canvas id="profitChart" height="200"></canvas>
+                <div class="chart-wrapper" style="position: relative; height: 350px; width: 100%; overflow: hidden;">
+                    <canvas id="profitChart"></canvas>
+                </div>
 
                 <div class="row mt-4 pt-3 border-top g-2">
                     <div class="col-6">
@@ -60,30 +62,52 @@
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Profit Trend Chart for Reports Module
-    const profitCtx = document.getElementById('profitChart').getContext('2d');
-    new Chart(profitCtx, {
-        type: 'bar',
-        data: {
-            labels: {{ chart_labels| safe }},
-        datasets: [{
-            label: 'Sales ($)',
-            data: {{ chart_sales| safe }},
-        backgroundColor: 'rgba(52, 152, 219, 0.6)',
-        borderRadius: 5
-        }, {
-            label: 'Profit ($)',
-            data: [4000, 5200, 3800, 6100, 4900, 5800],
-            backgroundColor: 'rgba(46, 204, 113, 0.8)',
-            borderRadius: 5
-        }]
-    },
-        options: {
-        responsive: true,
-        plugins: { legend: { position: 'bottom' } },
-        scales: { x: { grid: { display: false } } }
-    }
-});
+    // Step 2: Immediate check to prevent infinite re-entry
+    (function() {
+        const canvas = document.getElementById('profitChart');
+        if (!canvas) return;
+
+        // Step 3: Destroy existing instance if it exists on the window object
+        if (window.myProfitChart instanceof Chart) {
+            window.myProfitChart.destroy();
+        }
+
+        const profitCtx = canvas.getContext('2d');
+
+        // Step 4: Create the chart and store it globally
+        window.myProfitChart = new Chart(profitCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_labels|safe }},
+                datasets: [{
+                    label: 'Sales (₹)',
+                    data: {{ chart_sales|safe }},
+                    backgroundColor: 'rgba(52, 152, 219, 0.6)',
+                    borderRadius: 5
+                }, {
+                    label: 'Net Profit (₹)',
+                    data: {{ chart_profits|safe }},
+                    backgroundColor: 'rgba(46, 204, 113, 0.8)',
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                // Step 5: Disable Resize Observer if flickering persists
+                resizeDelay: 200, 
+                plugins: { 
+                    legend: { position: 'bottom' } 
+                },
+                scales: { 
+                    x: { grid: { display: false } },
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    })();
 </script>
+
 {% endblock %}

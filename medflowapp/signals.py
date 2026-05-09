@@ -15,4 +15,3 @@ def subtract_stock_on_sale(sender, instance, created, **kwargs):
         medicine = instance.medicine
         medicine.quantity -= instance.quantity_sold
         medicine.save()
-

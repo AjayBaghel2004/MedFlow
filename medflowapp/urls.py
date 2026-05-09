@@ -25,4 +25,5 @@ urlpatterns = [
     path('reports/', views.reports_section, name='reports'),
     path('export-excel/', views.export_sales_excel, name='export-excel'),
     path('export-pdf/', views.export_sales_pdf, name='export-pdf'),
+    path('logout/', views.logout_user, name='logout'),
 ]
