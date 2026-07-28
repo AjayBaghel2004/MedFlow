@@ -399,16 +399,3 @@ def logout_user(request):
     return redirect('/login/')
 
 
-# def send_mail_page(request):
-#     address = "ajaybaghel2459@gmail.com"
-#     subject = "test mail"
-#     message = "OTP verifiation 123456"
-
-#     if address and subject and message:
-#         try:
-#             result = send_mail(subject, message, settings.EMAIL_HOST_USER, [address])
-#             print(result,'//////////////////')
-#         except Exception as e:
-#             traceback.print_exc()
-#     else:
-#         context['result'] = 'All fields are required'
